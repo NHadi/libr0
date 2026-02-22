@@ -58,38 +58,26 @@ When your Rust program runs, the operating system gives it a contiguous chunk of
 ```
 High Memory Addresses (0x0000_7FFF_FFFF_FFFF - User Space upper bound)
 ┌─────────────────────────────────────────────┐
-│                                             │
 │              STACK                          │  ← Grows downward
 │  (Function frames, local variables)         │
-│                                             │
 ├─────────────────────────────────────────────┤
 │                   ↓                         │
 │                                             │
-│                                             │
 │              (unused space)                 │
-│                                             │
 │                                             │
 │                   ↑                         │
 ├─────────────────────────────────────────────┤
-│                                             │
 │              HEAP                           │  ← Grows upward
 │  (Dynamically allocated: Box, Vec, String)  │
-│                                             │
 ├─────────────────────────────────────────────┤
-│                                             │
 │        BSS (Uninitialized Data)             │
 │  (static mut with no initializer)           │
-│                                             │
 ├─────────────────────────────────────────────┤
-│                                             │
 │        DATA (Initialized Data)              │
 │  (static, const, string literals)           │
-│                                             │
 ├─────────────────────────────────────────────┤
-│                                             │
 │              TEXT (Code)                    │
 │  (Your compiled functions)                  │
-│                                             │
 └─────────────────────────────────────────────┘
 Low Memory Addresses (0x0000_0000_0000_0000)
 ```
@@ -105,27 +93,48 @@ Now let's see exactly where each piece of data from our example lives.
 Before `main()` even runs, the OS loads static data into the DATA segment:
 
 ```
-TEXT Segment (Code):
-  0x1000: fn main() { ... }
-  0x2000: fn process_data() { ... }
-  0x3000: println!() code
-  ...
-
-DATA Segment (Initialized Statics):
-  0x5000: GREETING = "Hello" (string literal)
-          ├─ ptr:  0x5000  ─┐
-          ├─ len:  5        │
-          └─ "Hello\0"  <───┘
-
-BSS Segment (Zero-Initialized Statics):
-  0x6000: BUFFER = [0u8; 10_000]  (10 KB of zeros)
-          [0][0][0][0]...[0][0][0][0]
-          (10,000 bytes - all initialized to 0 at program start)
-
-HEAP: (empty at start)
-
-STACK: (empty at start)
+High Memory Addresses (0x0000_7FFF_FFFF_FFFF)
+┌────────────────────────────────────────────┐
+│                   STACK                    │
+│              (empty at start)              │
+├────────────────────────────────────────────┤
+│             (unused space)                 │
+├────────────────────────────────────────────┤
+│                   HEAP                     │
+│              (empty at start)              │
+├────────────────────────────────────────────┤
+│        BSS (Uninitialized Data)            │
+│                                            │
+│  0x6000: BUFFER = [0u8; 10_000]            │
+│          [0][0][0][0]...[0][0][0][0]       │
+│          (10,000 bytes - all zeros)        │
+├────────────────────────────────────────────┤
+│        DATA (Initialized Data)             │
+│                                            │
+│  0x5000: GREETING = "Hello"                │
+│          ├─ ptr:  0x5000  ─┐               │
+│          ├─ len:  5        │               │
+│          └─ "Hello\0"  <───┘               │
+├────────────────────────────────────────────┤
+│              TEXT (Code)                   │
+│                                            │
+│  0x1000: fn main() { ... }                 │
+│  0x2000: fn process_data() { ... }         │
+│  ...    (Rust standard library functions)  │
+│  0x3000: println!() code                   │
+│  0x4000: std::alloc::alloc()               │
+│  0x7000: Vec::push()                       │
+│                                            │
+└────────────────────────────────────────────┘
+Low Memory Addresses (0x0000_0000_0000_0000)
 ```
+
+> **Note on addresses:** The stack addresses shown (0x7FFF_FFFF_FFFF) are realistic—they represent the upper canonical address range on x86-64 Linux. 
+> However, the low addresses (0x1000-0x7000) are simplified examples for clarity. Real addresses on modern systems would be:
+> - **TEXT/DATA/BSS segments:** Around `0x5555_5555_0000` to `0x5555_5556_0000` (randomized by ASLR)
+> - **Heap:** Typically starts around `0x5555_5556_0000` and grows upward
+> - **First 64KB (0x0000-0xFFFF):** Unmapped as null pointer protection—dereferencing causes segfault
+> We use simplified addresses in diagrams to keep them readable and focus on concepts rather than implementation details.
 
 > **Why BSS exists:** It's a file size optimization! BSS stores only zeros, so the executable doesn't need to include them.
 >
@@ -138,40 +147,40 @@ STACK: (empty at start)
 >
 > **Result:** Executable with BSS is ~320 KB, with Data would be ~1.3 MB. Same memory usage at runtime, but different file sizes!
 
-### Step 2: main() Starts - Stack Frame Created
+### Step 2: main() Executes - Local Variables on Stack
 
-When `main()` is called, a **stack frame** is created:
+When `main()` is called, the function's **prologue** (compiler-generated instructions at the beginning of the function) creates a stack frame by adjusting the stack pointer (typically `sub rsp, N` where N is the size needed for local variables). After all local variables are initialized (right before calling `process_data(x, &s)`), the stack looks like this:
 
 ```
 STACK (grows downward from high addresses):
-┌────────────────────────────────────┐  ← Stack Pointer (SP)
-│                                    │    0x7FFF_FFFF_FFF0
-│    main()'s stack frame            │
-│                                    │
-│  [Return address to OS]            │  ← Where to return after main
-│  [Saved registers]                 │
-│                                    │
-│  x: i32 = 42                       │  ← Local variable (4 bytes)
-│  y: i32 = 100                      │  ← Local variable (4 bytes)
-│                                    │
-│  s: String                         │  ← String struct (24 bytes):
-│    ├─ ptr:  0x8000 ──────┐         │     Points to heap
-│    ├─ len:  5            │         │
-│    └─ cap:  5            │         │
-│                          │         │
-│  v: Vec<i32>             │         │  ← Vec struct (24 bytes):
-│    ├─ ptr:  0x8100 ───┐  │         │     Points to heap
-│    ├─ len:  5         │  │         │
-│    └─ cap:  5         │  │         │
-│                       │  │         │
-│  arr: [i32; 5]        │  │         │  ← Native array (20 bytes):
-│    [50]               │  │         │     All data on stack!
-│    [40]               │  │         │     Elements at increasing
-│    [30]               │  │         │     addresses (50 highest,
-│    [20]               │  │         │     10 lowest)
-│    [10]               │  │         │
-│                       │  │         │
-└───────────────────────┼──┼─────────┘
+┌─────────────────────────────────┐
+│                                 │    0x7FFF_FFFF_FFF0 (high address)
+│    main()'s stack frame         │
+│                                 │
+│  [Return address]               │  ← Where to return after main
+│  [Saved registers]              │
+│                                 │
+│  x: i32 = 42                    │  ← Local variable (4 bytes)
+│  y: i32 = 100                   │  ← Local variable (4 bytes)
+│                                 │
+│  s: String                      │  ← String struct (24 bytes):
+│    ├─ ptr:  0x8000 ──────┐      │     Points to heap
+│    ├─ len:  5            │      │
+│    └─ cap:  5            │      │
+│                          │      │
+│  v: Vec<i32>             │      │  ← Vec struct (24 bytes):
+│    ├─ ptr:  0x8100 ───┐  │      │     Points to heap
+│    ├─ len:  5         │  │      │
+│    └─ cap:  5         │  │      │
+│                       │  │      │
+│  arr: [i32; 5]        │  │      │  ← Native array (20 bytes):
+│    [50]               │  │      │     All data on stack!
+│    [40]               │  │      │     Elements at increasing
+│    [30]               │  │      │     addresses (50 highest,
+│    [20]               │  │      │     10 lowest)
+│    [10]               │  │      │
+│                       │  │      │
+└───────────────────────┼──┼──────┘  ← Stack Pointer (RSP) points here (low address)
                         │  │
                         │  └───────┐
 HEAP (grows upward):    │          │
