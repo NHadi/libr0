@@ -87,6 +87,14 @@ For low-level concepts (syscalls, process memory, blocking vs non-blocking opera
    - `get` and `set` operations
    - When to use `Cell`
 
+6. **[RefCell](./docs/06-refcell.md)** - Runtime borrow checking
+   - Interior mutability for any type
+   - Guard types (`Ref` and `RefMut`)
+   - Runtime borrow tracking with counters
+   - RAII and automatic cleanup
+   - `try_borrow` for non-panicking access
+   - Common pitfalls and patterns
+
 ### Appendix
 
 - **[Closures](./docs/appendix-closures.md)** - Function-like types
@@ -111,7 +119,6 @@ For low-level concepts (syscalls, process memory, blocking vs non-blocking opera
 
 The following chapters are planned but not yet implemented. See [CLAUDE.md](./CLAUDE.md) for the full roadmap.
 
-- **RefCell** - Runtime borrow checking with guard types
 - **Rc** - Reference counting for shared ownership
 - **Arc** - Atomic reference counting
 - **Send and Sync** - Thread safety markers
@@ -173,6 +180,7 @@ rustlib/
 │   ├── 03-box.md             # Chapter 3: Box
 │   ├── 04-vec.md             # Chapter 4: Vec
 │   ├── 05-cell.md            # Chapter 5: Cell
+│   ├── 06-refcell.md         # Chapter 6: RefCell
 │   └── appendix-closures.md  # Appendix: Closures
 ├── src/                      # Library implementations
 │   ├── lib.rs                # Main library file
@@ -193,12 +201,13 @@ rustlib/
 Each chapter has corresponding example code in the `examples/` directory:
 
 ```bash
-# Run individual examples (Chapters 1-5 completed)
+# Run individual examples (Chapters 1-6 completed)
 cargo run --example option      # Chapter 1: Option
 cargo run --example result      # Chapter 2: Result
 cargo run --example box         # Chapter 3: Box
 cargo run --example vec         # Chapter 4: Vec
 cargo run --example cell        # Chapter 5: Cell
+cargo run --example refcell     # Chapter 6: RefCell
 ```
 
 ### Running Tests
@@ -225,12 +234,13 @@ cargo test cell
 You can use the completed implementations in your own code:
 
 ```rust
-// Completed types (Chapters 1-5)
+// Completed types (Chapters 1-6)
 use rustlib::option::{MyOption, Some, None};
 use rustlib::result::{Result0, Ok, Err};
 use rustlib::r#box::Box0;
 use rustlib::vec::Vec0;
 use rustlib::cell::Cell0;
+use rustlib::refcell::RefCell0;
 
 // Use the vec0! macro
 use rustlib::vec0;

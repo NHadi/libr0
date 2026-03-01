@@ -468,9 +468,9 @@ impl<T: ?Sized> Cell0<T> {
 }
 ```
 
-**About `?Sized`:** This impl block uses `T: ?Sized` which removes the default `Sized` bound. By default, all generic type parameters in Rust have an implicit `T: Sized` constraint. The `?Sized` relaxes this, allowing `get_mut` to work with dynamically sized types (DSTs) like `[T]` or `str`. Since `get_mut` only works with references (`&mut T`), it doesn't need `T` itself to have a known size at compile time - references to DSTs are sized (they're fat pointers).
-
 **The key insight:** `get_mut` requires `&mut self`, not `&self`.
+
+This is just regular Rust borrowing - nothing special. The compiler catches it at compile time because `get_mut` takes `&mut self`.
 
 This means you need **exclusive mutable access** to the Cell itself. At that point, you don't need interior mutability at all - Rust already knows at compile-time that you have exclusive access!
 
@@ -491,8 +491,6 @@ let r2 = cell.get_mut();  // ❌ Error: cannot borrow `cell` as mutable more tha
 // cannot borrow `cell` as mutable more than once at a time
 // first mutable borrow occurs here
 ```
-
-This is just regular Rust borrowing - nothing special. The compiler catches it at compile time because `get_mut` takes `&mut self`.
 
 **Why this defeats Cell's purpose:**
 
