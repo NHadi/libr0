@@ -363,12 +363,11 @@ fn _18_pitfall_recursive() {
         }
 
         // BAD: Holding borrow across recursive call
-        // Uncomment to see panic at depth > 0:
-        // let _borrowed = cell.borrow();
-        // recursive_bad(cell, depth - 1);
-        // if depth == 1 {
-        //     cell.borrow_mut(); // PANIC! Parent call still holds borrow
-        // }
+        let _borrowed = cell.borrow();
+        recursive_bad(cell, depth - 1);
+        if depth == 1 {
+            cell.borrow_mut(); // PANIC! Parent call still holds borrow
+        }
     }
 
     fn recursive_good(cell: &RefCell0<i32>, depth: i32) {

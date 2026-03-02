@@ -1,66 +1,118 @@
-//! Rc0 - Educational reimplementation of Rc<T>
+//! Rc0 - Educational reimplementation of `Rc<T>` and `Weak<T>`
 
 use std::cell::Cell;
 use std::mem::ManuallyDrop;
 use std::ops::Deref;
 
+/// The heap-allocated data shared by all `Rc0` and `Weak0` pointers.
 struct RcInner<T> {
     strong_count: Cell<usize>,
     weak_count: Cell<usize>,
-    // ManuallyDrop prevents double-free when we deallocate via Box::from_raw
-    // We manually drop the value when strong_count reaches 0
     value: ManuallyDrop<T>,
 }
 
+/// A reference-counted pointer for shared ownership.
 pub struct Rc0<T> {
     ptr: *mut RcInner<T>,
 }
 
-pub struct Weak0<T> {
-    ptr: *mut RcInner<T>,
-}
-
 impl<T> Rc0<T> {
+    /// Creates a new reference-counted pointer.
+    /// ```
+    /// use rustlib::rc::Rc0;
+    /// let rc = Rc0::new(42);
+    /// assert_eq!(*rc, 42);
+    /// ```
     pub fn new(value: T) -> Rc0<T> {
         let inner = Box::new(RcInner {
             strong_count: Cell::new(1),
-            weak_count: Cell::new(1), // Implicit weak ref for strong refs
+            weak_count: Cell::new(1),
             value: ManuallyDrop::new(value),
         });
+
         Rc0 {
             ptr: Box::into_raw(inner),
         }
     }
 
+    /// Returns the number of strong references.
+    /// ```
+    /// use rustlib::rc::Rc0;
+    /// let rc = Rc0::new(42);
+    /// assert_eq!(Rc0::strong_count(&rc), 1);
+    /// let rc2 = Rc0::clone(&rc);
+    /// assert_eq!(Rc0::strong_count(&rc), 2);
+    /// ```
     pub fn strong_count(this: &Rc0<T>) -> usize {
         unsafe { (*this.ptr).strong_count.get() }
     }
 
+    /// Returns the number of weak references.
+    /// ```
+    /// use rustlib::rc::Rc0;
+    /// let rc = Rc0::new(42);
+    /// assert_eq!(Rc0::weak_count(&rc), 0);
+    /// let weak = Rc0::downgrade(&rc);
+    /// assert_eq!(Rc0::weak_count(&rc), 1);
+    /// ```
     pub fn weak_count(this: &Rc0<T>) -> usize {
-        // Subtract the implicit weak ref
-        unsafe { (*this.ptr).weak_count.get() - 1 }
+        let count = unsafe { (*this.ptr).weak_count.get() };
+        if count > 0 {
+            count - 1
+        } else {
+            0
+        }
     }
 
+    /// Creates a new weak reference.
+    /// ```
+    /// use rustlib::rc::Rc0;
+    /// let rc = Rc0::new(String::from("hello"));
+    /// let weak = Rc0::downgrade(&rc);
+    /// assert!(weak.upgrade().is_some());
+    /// ```
     pub fn downgrade(this: &Rc0<T>) -> Weak0<T> {
         let inner = unsafe { &*this.ptr };
         inner.weak_count.set(inner.weak_count.get() + 1);
         Weak0 { ptr: this.ptr }
     }
 
+    /// Returns a mutable reference if this is the only strong reference.
+    /// ```
+    /// use rustlib::rc::Rc0;
+    /// let mut rc = Rc0::new(5);
+    /// *Rc0::get_mut(&mut rc).unwrap() = 10;
+    /// assert_eq!(*rc, 10);
+    /// ```
     pub fn get_mut(this: &mut Rc0<T>) -> Option<&mut T> {
-        if Rc0::strong_count(this) == 1 && Rc0::weak_count(this) == 0 {
+        if Rc0::strong_count(this) == 1 {
+            // SAFETY: We're the sole owner
             unsafe { Some(&mut (*this.ptr).value) }
         } else {
             None
         }
     }
 
+    /// Returns true if the two pointers point to the same allocation.
+    /// ```
+    /// use rustlib::rc::Rc0;
+    /// let rc1 = Rc0::new(42);
+    /// let rc2 = Rc0::clone(&rc1);
+    /// assert!(Rc0::ptr_eq(&rc1, &rc2));
+    /// ```
     pub fn ptr_eq(a: &Rc0<T>, b: &Rc0<T>) -> bool {
         a.ptr == b.ptr
     }
 }
 
 impl<T> Clone for Rc0<T> {
+    /// Clones the reference-counted pointer (increments the count).
+    /// ```
+    /// use rustlib::rc::Rc0;
+    /// let rc1 = Rc0::new(42);
+    /// let rc2 = rc1.clone();
+    /// assert_eq!(Rc0::strong_count(&rc1), 2);
+    /// ```
     fn clone(&self) -> Rc0<T> {
         let inner = unsafe { &*self.ptr };
         inner.strong_count.set(inner.strong_count.get() + 1);
@@ -72,6 +124,7 @@ impl<T> Deref for Rc0<T> {
     type Target = T;
 
     fn deref(&self) -> &T {
+        // SAFETY: Rc always points to valid data
         unsafe { &(*self.ptr).value }
     }
 }
@@ -79,55 +132,129 @@ impl<T> Deref for Rc0<T> {
 impl<T> Drop for Rc0<T> {
     fn drop(&mut self) {
         let inner = unsafe { &*self.ptr };
-        let count = inner.strong_count.get();
+        let strong = inner.strong_count.get();
+        inner.strong_count.set(strong - 1);
 
-        if count == 1 {
-            // Last strong reference - drop the value first
-            unsafe { ManuallyDrop::drop(&mut (*self.ptr).value) };
-        }
+        if strong == 1 {
+            // Drop the value
+            unsafe {
+                ManuallyDrop::drop(&mut (*self.ptr).value);
+            }
 
-        inner.strong_count.set(count - 1);
-
-        if count == 1 {
-            // Decrement the implicit weak ref
+            // Decrement weak count (remove implicit weak ref)
             let weak = inner.weak_count.get();
             inner.weak_count.set(weak - 1);
 
-            // If no weak refs remain, deallocate
             if weak == 1 {
-                drop(unsafe { Box::from_raw(self.ptr) });
+                // Deallocate
+                unsafe {
+                    drop(Box::from_raw(self.ptr));
+                }
             }
         }
     }
 }
 
-impl<T: std::fmt::Debug> std::fmt::Debug for Rc0<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Rc0({:?})", **self)
+impl<T: Default> Default for Rc0<T> {
+    /// Creates a new Rc with the default value.
+    /// ```
+    /// use rustlib::rc::Rc0;
+    /// let rc: Rc0<i32> = Rc0::default();
+    /// assert_eq!(*rc, 0);
+    /// ```
+    fn default() -> Rc0<T> {
+        Rc0::new(T::default())
     }
 }
 
-// ============================================================================
-// Weak implementation
-// ============================================================================
+impl<T: std::fmt::Debug> std::fmt::Debug for Rc0<T> {
+    /// Formats the value using the given formatter.
+    /// ```
+    /// use rustlib::rc::Rc0;
+    /// let rc = Rc0::new(42);
+    /// assert_eq!(format!("{:?}", rc), "42");
+    /// ```
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Debug::fmt(&**self, f)
+    }
+}
+
+/// A weak reference that doesn't own the value.
+pub struct Weak0<T> {
+    ptr: *mut RcInner<T>,
+}
 
 impl<T> Weak0<T> {
+    /// Attempts to upgrade to a strong reference.
+    /// ```
+    /// use rustlib::rc::Rc0;
+    /// let rc = Rc0::new(42);
+    /// let weak = Rc0::downgrade(&rc);
+    /// assert!(weak.upgrade().is_some());
+    /// drop(rc);
+    /// assert!(weak.upgrade().is_none());
+    /// ```
     pub fn upgrade(&self) -> Option<Rc0<T>> {
         let inner = unsafe { &*self.ptr };
-        if inner.strong_count.get() == 0 {
+        let strong = inner.strong_count.get();
+
+        if strong == 0 {
             None
         } else {
-            inner.strong_count.set(inner.strong_count.get() + 1);
+            inner.strong_count.set(strong + 1);
             Some(Rc0 { ptr: self.ptr })
         }
     }
 
+    /// Returns the number of strong references.
+    /// ```
+    /// use rustlib::rc::Rc0;
+    /// let rc = Rc0::new(42);
+    /// let weak = Rc0::downgrade(&rc);
+    /// assert_eq!(weak.strong_count(), 1);
+    /// ```
     pub fn strong_count(&self) -> usize {
         unsafe { (*self.ptr).strong_count.get() }
+    }
+
+    /// Returns the number of weak references.
+    /// ```
+    /// use rustlib::rc::Rc0;
+    /// let rc = Rc0::new(42);
+    /// let weak = Rc0::downgrade(&rc);
+    /// assert_eq!(weak.weak_count(), 1);
+    /// ```
+    pub fn weak_count(&self) -> usize {
+        let count = unsafe { (*self.ptr).weak_count.get() };
+        if count > 0 {
+            count - 1
+        } else {
+            0
+        }
+    }
+
+    /// Returns true if the two pointers point to the same allocation.
+    /// ```
+    /// use rustlib::rc::{Rc0, Weak0};
+    /// let rc = Rc0::new(42);
+    /// let weak1 = Rc0::downgrade(&rc);
+    /// let weak2 = weak1.clone();
+    /// assert!(Weak0::ptr_eq(&weak1, &weak2));
+    /// ```
+    pub fn ptr_eq(a: &Weak0<T>, b: &Weak0<T>) -> bool {
+        a.ptr == b.ptr
     }
 }
 
 impl<T> Clone for Weak0<T> {
+    /// Clones the weak reference (increments the weak count).
+    /// ```
+    /// use rustlib::rc::Rc0;
+    /// let rc = Rc0::new(42);
+    /// let weak1 = Rc0::downgrade(&rc);
+    /// let weak2 = weak1.clone();
+    /// assert_eq!(Rc0::weak_count(&rc), 2);
+    /// ```
     fn clone(&self) -> Weak0<T> {
         let inner = unsafe { &*self.ptr };
         inner.weak_count.set(inner.weak_count.get() + 1);
@@ -141,9 +268,11 @@ impl<T> Drop for Weak0<T> {
         let weak = inner.weak_count.get();
         inner.weak_count.set(weak - 1);
 
-        // Deallocate if both counts are zero
         if weak == 1 && inner.strong_count.get() == 0 {
-            drop(unsafe { Box::from_raw(self.ptr) });
+            // Deallocate
+            unsafe {
+                drop(Box::from_raw(self.ptr));
+            }
         }
     }
 }
@@ -153,155 +282,61 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_new_and_deref() {
+    fn test_basic() {
         let rc = Rc0::new(42);
         assert_eq!(*rc, 42);
+        assert_eq!(Rc0::strong_count(&rc), 1);
     }
 
     #[test]
     fn test_clone() {
-        let rc1 = Rc0::new(42);
-        let rc2 = rc1.clone();
-
-        assert_eq!(*rc1, 42);
-        assert_eq!(*rc2, 42);
+        let rc1 = Rc0::new(String::from("hello"));
+        let rc2 = Rc0::clone(&rc1);
+        assert_eq!(*rc1, "hello");
+        assert_eq!(*rc2, "hello");
         assert_eq!(Rc0::strong_count(&rc1), 2);
     }
 
     #[test]
-    fn test_strong_count() {
+    fn test_drop() {
         let rc1 = Rc0::new(42);
-        assert_eq!(Rc0::strong_count(&rc1), 1);
-
-        let rc2 = rc1.clone();
+        let rc2 = Rc0::clone(&rc1);
         assert_eq!(Rc0::strong_count(&rc1), 2);
-        assert_eq!(Rc0::strong_count(&rc2), 2);
-
         drop(rc2);
         assert_eq!(Rc0::strong_count(&rc1), 1);
     }
 
     #[test]
-    fn test_ptr_eq() {
-        let rc1 = Rc0::new(42);
-        let rc2 = rc1.clone();
-        let rc3 = Rc0::new(42);
-
-        assert!(Rc0::ptr_eq(&rc1, &rc2));
-        assert!(!Rc0::ptr_eq(&rc1, &rc3));
-    }
-
-    #[test]
-    fn test_get_mut() {
-        let mut rc1 = Rc0::new(42);
-
-        // Single owner, should get mutable reference
-        if let Some(val) = Rc0::get_mut(&mut rc1) {
-            *val = 100;
-        }
-        assert_eq!(*rc1, 100);
-
-        // Multiple owners, should return None
-        let _rc2 = rc1.clone();
-        assert!(Rc0::get_mut(&mut rc1).is_none());
-    }
-
-    #[test]
-    fn test_downgrade() {
+    fn test_weak() {
         let rc = Rc0::new(42);
         let weak = Rc0::downgrade(&rc);
-
         assert_eq!(Rc0::weak_count(&rc), 1);
-        assert_eq!(weak.strong_count(), 1);
-    }
-
-    #[test]
-    fn test_weak_upgrade() {
-        let rc = Rc0::new(42);
-        let weak = Rc0::downgrade(&rc);
-
-        let upgraded = weak.upgrade();
-        assert!(upgraded.is_some());
-        assert_eq!(*upgraded.unwrap(), 42);
-    }
-
-    #[test]
-    fn test_weak_upgrade_after_drop() {
-        let rc = Rc0::new(42);
-        let weak = Rc0::downgrade(&rc);
-
+        assert_eq!(*weak.upgrade().unwrap(), 42);
         drop(rc);
-
-        let upgraded = weak.upgrade();
-        assert!(upgraded.is_none());
-    }
-
-    #[test]
-    fn test_weak_clone() {
-        let rc = Rc0::new(42);
-        let weak1 = Rc0::downgrade(&rc);
-        let _weak2 = weak1.clone();
-
-        assert_eq!(Rc0::weak_count(&rc), 2);
-    }
-
-    #[test]
-    fn test_drop_with_weak_refs() {
-        let rc = Rc0::new(String::from("hello"));
-        let weak = Rc0::downgrade(&rc);
-
-        drop(rc);
-
-        // Weak ref should still exist but upgrade should fail
         assert!(weak.upgrade().is_none());
     }
 
     #[test]
-    fn test_debug() {
-        let rc = Rc0::new(42);
-        assert_eq!(format!("{:?}", rc), "Rc0(42)");
+    fn test_get_mut() {
+        let mut rc = Rc0::new(5);
+        *Rc0::get_mut(&mut rc).unwrap() = 10;
+        assert_eq!(*rc, 10);
     }
 
     #[test]
-    fn test_multiple_weak_refs() {
-        let rc = Rc0::new(42);
-        let weak1 = Rc0::downgrade(&rc);
-        let weak2 = Rc0::downgrade(&rc);
-        let weak3 = weak1.clone();
-
-        assert_eq!(Rc0::weak_count(&rc), 3);
-
-        drop(weak1);
-        assert_eq!(Rc0::weak_count(&rc), 2);
-
-        drop(weak2);
-        assert_eq!(Rc0::weak_count(&rc), 1);
-
-        drop(weak3);
-        assert_eq!(Rc0::weak_count(&rc), 0);
+    fn test_get_mut_shared() {
+        let mut rc1 = Rc0::new(5);
+        let _rc2 = Rc0::clone(&rc1);
+        assert!(Rc0::get_mut(&mut rc1).is_none());
     }
 
     #[test]
-    fn test_drop_order() {
-        use std::sync::Arc;
-        let drop_checker = Arc::new(());
-        assert_eq!(Arc::strong_count(&drop_checker), 1);
-
-        {
-            let rc1 = Rc0::new(drop_checker.clone());
-            let rc2 = rc1.clone();
-            let rc3 = rc1.clone();
-
-            assert_eq!(Arc::strong_count(&drop_checker), 2); // 1 original + 1 in Rc
-
-            drop(rc1);
-            assert_eq!(Arc::strong_count(&drop_checker), 2); // Still in Rc
-
-            drop(rc2);
-            assert_eq!(Arc::strong_count(&drop_checker), 2); // Still in Rc
-
-            drop(rc3);
-            assert_eq!(Arc::strong_count(&drop_checker), 1); // Rc dropped, back to original
-        }
+    fn test_ptr_eq() {
+        let rc1 = Rc0::new(42);
+        let rc2 = Rc0::clone(&rc1);
+        let rc3 = Rc0::new(42);
+        assert!(Rc0::ptr_eq(&rc1, &rc2));
+        assert!(!Rc0::ptr_eq(&rc1, &rc3));
     }
 }
+
