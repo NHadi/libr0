@@ -208,6 +208,17 @@ cargo run --example box         # Chapter 3: Box
 cargo run --example vec         # Chapter 4: Vec
 cargo run --example cell        # Chapter 5: Cell
 cargo run --example refcell     # Chapter 6: RefCell
+cargo run --example rc          # Chapter 7: Rc (basic implementation)
+```
+
+**Note:** Example files contain TODO placeholders for you to fill in as exercises. Complete solutions are available on the `answers` branch:
+
+```bash
+# Switch to the answers branch to see complete solutions
+git checkout answers
+
+# Return to the main branch with exercises
+git checkout main
 ```
 
 ### Running Tests
@@ -235,7 +246,7 @@ You can use the completed implementations in your own code:
 
 ```rust
 // Completed types (Chapters 1-6)
-use rustlib::option::{MyOption, Some, None};
+use rustlib::option::{Option0, Some, None};
 use rustlib::result::{Result0, Ok, Err};
 use rustlib::r#box::Box0;
 use rustlib::vec::Vec0;
