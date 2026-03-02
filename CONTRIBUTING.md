@@ -10,14 +10,16 @@ The documentation is built using [mdBook](https://rust-lang.github.io/mdBook/) a
 
 To preview the documentation locally:
 
-1. **Install mdBook and mdbook-svgbob:**
+1. **Install mdBook and preprocessors:**
 
    ```bash
    cargo install mdbook --version 0.4.52
    cargo install mdbook-svgbob
+   cargo install mdbook-mermaid --version 0.14.0
+   mdbook-mermaid install
    ```
 
-   **Note:** We use mdBook 0.4.52 specifically for compatibility with mdbook-svgbob 0.2.2.
+   **Note:** We use mdBook 0.4.52 specifically for compatibility with the preprocessors.
 
 2. **Build the documentation:**
 
@@ -53,9 +55,11 @@ rustlib/
 └── book/                  # Generated HTML (gitignored)
 ```
 
-### ASCII Diagrams
+### Diagrams
 
-ASCII diagrams in the documentation are automatically converted to SVG using the svgbob preprocessor. To add a diagram:
+The documentation supports two types of diagrams:
+
+**ASCII Diagrams (using svgbob):**
 
 ````markdown
 ```bob
@@ -65,7 +69,19 @@ ASCII diagrams in the documentation are automatically converted to SVG using the
 ```
 ````
 
-**Note:** Use the `bob` code fence annotation (not `svgbob`) for diagram conversion.
+**Mermaid Diagrams:**
+
+````markdown
+```mermaid
+graph TD;
+    A-->B;
+    A-->C;
+    B-->D;
+    C-->D;
+```
+````
+
+Both are automatically converted to SVG in the generated documentation.
 
 ### Making Changes
 

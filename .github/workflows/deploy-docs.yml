@@ -25,7 +25,8 @@ jobs:
           path: |
             ~/.cargo/bin/mdbook
             ~/.cargo/bin/mdbook-svgbob
-          key: ${{ runner.os }}-cargo-bins-mdbook-0.4.52-svgbob-0.2.2
+            ~/.cargo/bin/mdbook-mermaid
+          key: ${{ runner.os }}-cargo-bins-mdbook-0.4.52-svgbob-0.2.2-mermaid-0.14.0
           restore-keys: |
             ${{ runner.os }}-cargo-bins-
 
@@ -44,6 +45,17 @@ jobs:
           else
             echo "mdbook-svgbob already installed"
           fi
+
+      - name: Install mdbook-mermaid
+        run: |
+          if ! command -v mdbook-mermaid &> /dev/null; then
+            cargo install mdbook-mermaid --version 0.14.0
+          else
+            echo "mdbook-mermaid already installed"
+          fi
+
+      - name: Setup mermaid
+        run: mdbook-mermaid install
 
       - name: Build documentation
         run: mdbook build
