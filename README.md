@@ -1,10 +1,10 @@
 # libr0
 
-[![Deploy Documentation](https://github.com/arinal/rustlib/actions/workflows/deploy-docs.yml/badge.svg)](https://github.com/arinal/rustlib/actions/workflows/deploy-docs.yml)
+[![Deploy Documentation](https://github.com/arinal/libr0/actions/workflows/deploy-docs.yml/badge.svg)](https://github.com/arinal/libr0/actions/workflows/deploy-docs.yml)
 
 Building Rust's standard library from scratch - a hands-on learning guide to understanding Rust's core types by implementing them ourselves.
 
-**[📖 Read the Documentation](https://arinal.github.io/rustlib/)**
+**[📖 Read the Documentation](https://arinal.github.io/libr0/)**
 
 ## What's in the name?
 
