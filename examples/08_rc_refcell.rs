@@ -9,7 +9,7 @@
 mod common;
 
 use rustlib::rc::{Rc0, Weak0};
-use rustlib::refcell::{BorrowError, RefCell0};
+use rustlib::refcell::{BorrowError, Ref, RefCell0};
 
 // ============================================================================
 // Exercises - Replace variables with TODOs with the correct operations
@@ -19,7 +19,7 @@ fn _01_create_and_access() {
     // Create an Rc0<RefCell0<i32>> to allow shared ownership with interior mutability
     let data = Rc0::new(RefCell0::new(42));
 
-    let value = *data.borrow();
+    let value = 0; // TODO: borrow from RefCell0 and get the value
 
     assert_eq!(value, 42);
 }
@@ -27,7 +27,7 @@ fn _01_create_and_access() {
 fn _02_mutate_through_rc() {
     let data = Rc0::new(RefCell0::new(10));
 
-    *data.borrow_mut() += 5;
+    // TODO: borrow_mut and add 5 to the value
 
     assert_eq!(*data.borrow(), 15);
 }
@@ -40,9 +40,9 @@ fn _03_multiple_owners_mutate() {
     let owner2 = Rc0::clone(&data);
     let owner3 = Rc0::clone(&data);
 
-    *owner1.borrow_mut() += 10;
-    *owner2.borrow_mut() += 20;
-    *owner3.borrow_mut() += 30;
+    // TODO: use owner1 to add 10
+    // TODO: use owner2 to add 20
+    // TODO: use owner3 to add 30
 
     assert_eq!(*data.borrow(), 60);
     assert_eq!(Rc0::strong_count(&data), 4); // data + 3 owners
@@ -54,8 +54,8 @@ fn _03b_pattern_comparison() {
     let c1 = Rc0::clone(&counter);
     let c2 = Rc0::clone(&counter);
 
-    *c1.borrow_mut() += 1;
-    *c2.borrow_mut() += 1;
+    // TODO: use c1 to increment counter by 1
+    // TODO: use c2 to increment counter by 1
 
     assert_eq!(*counter.borrow(), 2); // Both mutations affect the SAME value
 
@@ -67,7 +67,7 @@ fn _03b_pattern_comparison() {
 
     assert_eq!(**pointer.borrow(), 10); // Pointing to value_a
 
-    *pointer.borrow_mut() = Rc0::clone(&value_b);
+    // TODO: change pointer to point to value_b instead
 
     assert_eq!(**pointer.borrow(), 20); // Now pointing to value_b
 
@@ -79,11 +79,11 @@ fn _03b_pattern_comparison() {
 fn _04_clone_semantics() {
     let data = Rc0::new(RefCell0::new(vec![1, 2, 3]));
 
-    let rc_clone: Rc0<RefCell0<Vec<i32>>> = Rc0::clone(&data);
+    let rc_clone: Rc0<RefCell0<Vec<i32>>> = todo!(); // TODO: Clone the Rc0 (cheap - just increments counter)
 
-    let data_clone: Vec<i32> = data.borrow().clone();
+    let data_clone: Vec<i32> = todo!(); // TODO: Clone the inner Vec (expensive - copies the data)
 
-    data.borrow_mut().push(4);
+    // TODO: Mutate through data - push 4
 
     // rc_clone sees the change (both point to same RefCell0)
     assert_eq!(*rc_clone.borrow(), vec![1, 2, 3, 4]);
@@ -95,13 +95,13 @@ fn _04_clone_semantics() {
 fn _05_reference_counts() {
     let data = Rc0::new(RefCell0::new(String::from("hello")));
 
-    let strong1 = Rc0::strong_count(&data);
-    let weak1 = Rc0::weak_count(&data);
+    let strong1 = 0; // TODO: get strong_count
+    let weak1 = 0; // TODO: get weak_count
 
     let weak = Rc0::downgrade(&data);
 
-    let strong2 = Rc0::strong_count(&data);
-    let weak2 = Rc0::weak_count(&data);
+    let strong2 = 0; // TODO: get strong_count
+    let weak2 = 0; // TODO: get weak_count
 
     assert_eq!(strong1, 1);
     assert_eq!(weak1, 0);
@@ -112,7 +112,7 @@ fn _05_reference_counts() {
 fn _06_create_weak() {
     let data = Rc0::new(RefCell0::new(100));
 
-    let weak: Weak0<RefCell0<i32>> = Rc0::downgrade(&data);
+    let weak: Weak0<RefCell0<i32>> = Weak0::new(); // TODO: downgrade data to create weak reference
 
     assert_eq!(Rc0::strong_count(&data), 1);
     assert_eq!(Rc0::weak_count(&data), 1);
@@ -135,7 +135,7 @@ fn _08_upgrade_weak_after_drop() {
         Rc0::downgrade(&data)
     }; // data dropped here
 
-    let result: Option<Rc0<RefCell0<i32>>> = weak.upgrade();
+    let result: Option<Rc0<RefCell0<i32>>> = None; // TODO: try to upgrade weak
 
     assert!(result.is_none());
 }
@@ -144,9 +144,7 @@ fn _09_weak_with_refcell() {
     let data = Rc0::new(RefCell0::new(vec![1, 2, 3]));
     let weak = Rc0::downgrade(&data);
 
-    if let Some(strong) = weak.upgrade() {
-        strong.borrow_mut().push(4);
-    }
+    // TODO: upgrade weak, then borrow_mut and push 4
 
     assert_eq!(*data.borrow(), vec![1, 2, 3, 4]);
 }
@@ -156,7 +154,7 @@ fn _10_try_borrow() {
 
     let _guard = data.borrow_mut(); // Hold a mutable borrow
 
-    let result: Result<_, BorrowError> = data.try_borrow();
+    let result: Result<Ref<'_, i32>, BorrowError> = todo!(); // TODO: use try_borrow (should fail)
 
     assert!(result.is_err());
 }
@@ -164,7 +162,7 @@ fn _10_try_borrow() {
 fn _11_replace_contents() {
     let data = Rc0::new(RefCell0::new(String::from("old")));
 
-    let old = data.replace(String::from("new"));
+    let old = String::new(); // TODO: replace with "new" using replace()
 
     assert_eq!(old, "old");
     assert_eq!(*data.borrow(), "new");
@@ -207,8 +205,9 @@ fn _12_graph_structure() {
     let node_b = GraphNode::new(2);
     let node_c = GraphNode::new(3);
 
-    node_a.add_neighbor(Rc0::clone(&node_b));
-    node_b.add_neighbor(Rc0::clone(&node_c));
+    // TODO: Add edge A -> B (use add_neighbor with Rc0::clone)
+    // TODO: Add edge B -> C (use add_neighbor with Rc0::clone)
+    // Note: Don't add C -> A yet, as that would create a cycle!
 
     assert_eq!(node_a.neighbor_count(), 1);
     assert_eq!(node_b.neighbor_count(), 1);
@@ -261,9 +260,8 @@ fn _13_tree_with_parent() {
     let child2 = TreeNode::new(3);
     let grandchild = TreeNode::new(4);
 
-    TreeNode::add_child(&root, Rc0::clone(&child1));
-    TreeNode::add_child(&root, Rc0::clone(&child2));
-    TreeNode::add_child(&child1, Rc0::clone(&grandchild));
+    // TODO: Add child1 and child2 to root (use TreeNode::add_child with Rc0::clone)
+    // TODO: Add grandchild to child1 (use TreeNode::add_child with Rc0::clone)
 
     // Verify structure
     assert_eq!(root.child_count(), 2);
@@ -335,8 +333,8 @@ fn _14_observer_pattern() {
     let logger1 = Rc0::new(Logger::new("Logger1"));
     let logger2 = Rc0::new(Logger::new("Logger2"));
 
-    observable.subscribe(Rc0::clone(&logger1));
-    observable.subscribe(Rc0::clone(&logger2));
+    // TODO: Subscribe logger1 (use observable.subscribe with Rc0::clone)
+    // TODO: Subscribe logger2 (use observable.subscribe with Rc0::clone)
 
     // Notify all observers
     observable.notify_all("data_changed");
@@ -402,8 +400,8 @@ impl Cache {
 fn _15_shared_cache() {
     let cache = Cache::new();
 
-    cache.insert(String::from("user:1"), String::from("Alice"));
-    cache.insert(String::from("user:2"), String::from("Bob"));
+    // TODO: Insert entry with key "user:1" and value "Alice" (use cache.insert with String::from)
+    // TODO: Insert entry with key "user:2" and value "Bob" (use cache.insert with String::from)
 
     // Multiple readers can access the cache
     let reader1 = &cache;
