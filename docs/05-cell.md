@@ -304,7 +304,7 @@ println!("{}", r1);  // DANGER: r1 still pointing to the value inside the cell!
 
 **Visualizing the problem:**
 
-```
+```bob
 Step 1: cell.get_ref() returns a reference
 ┌──────────────┐
 │ Cell<i32>    │
@@ -340,7 +340,7 @@ cell.set(10);       // Mutate through &self
 println!("{}", n);  // Still reads 5, because n is a copy, not a reference!
 ```
 
-```
+```bob
 Initial state:
 ┌──────────────┐
 │ Cell<i32>    │
@@ -494,7 +494,7 @@ let r2 = cell.get_mut();  // ❌ Error: cannot borrow `cell` as mutable more tha
 
 **Why this defeats Cell's purpose:**
 
-```
+```bob
 Cell's point:        &Cell<T>  ──set()──>  mutate through &self
                                             (interior mutability)
 

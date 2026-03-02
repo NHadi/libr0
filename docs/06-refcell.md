@@ -110,7 +110,7 @@ let borrowed = cell.borrow();  // Returns &String (no copy!)
 
 RefCell uses a simple counter (`borrow_count`) to track the borrow state:
 
-```
+```bob
 ┌────────────────────────────────────┐
 │ RefCell<T>                         │
 │ ┌────────────────────────────────┐ │

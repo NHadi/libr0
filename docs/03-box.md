@@ -80,7 +80,7 @@ The **heap** is for dynamic allocation:
 3. Keeps a pointer to that memory on the stack
 4. Automatically frees the memory when dropped
 
-```
+```bob
 Stack              Heap
 ┌─────────┐       ┌─────────┐
 │ Box<T>  │──────>│    T    │
@@ -127,7 +127,7 @@ So `Box<List>` doesn't contain a `List`. It contains a _pointer_ to a `List` som
 
 **Memory layout without Box (infinite, this confuses the compiler!):**
 
-```
+```bob
 Cons(i32, List)
 ├─ i32: 4 bytes
 └─ List: ?
@@ -144,7 +144,7 @@ The compiler tries to calculate: `size(List) = 4 + size(List) = 4 + 4 + size(Lis
 
 **Memory layout with Box (fixed!):**
 
-```
+```bob
         STACK                           HEAP
 ┌─────────────────────┐       ┌─────────────────────┐
 │ List::Cons          │       │ List::Cons          │
@@ -496,7 +496,7 @@ After `into_inner()`:
 
 **Before `into_inner()`:**
 
-```
+```bob
         STACK         │      HEAP
                       │
    boxed: Box0       │     String struct (24 bytes)
@@ -515,7 +515,7 @@ After `into_inner()`:
 
 **After `into_inner()`:**
 
-```
+```bob
         STACK         │      HEAP
                       │
    s: String          │     (String struct's heap memory freed!)

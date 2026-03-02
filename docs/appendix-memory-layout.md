@@ -55,7 +55,7 @@ Now let's see where each piece of data lives in memory.
 
 When your Rust program runs, the operating system gives it a contiguous chunk of virtual memory organized into distinct regions:
 
-```
+```bob
 High Memory Addresses (0x0000_7FFF_FFFF_FFFF - User Space upper bound)
 ┌─────────────────────────────────────────────┐
 │              STACK                          │  ← Grows downward
@@ -92,7 +92,7 @@ Now let's see exactly where each piece of data from our example lives.
 
 Before `main()` even runs, the OS loads static data into the DATA segment:
 
-```
+```bob
 High Memory Addresses (0x0000_7FFF_FFFF_FFFF)
 ┌────────────────────────────────────────────┐
 │                   STACK                    │
@@ -151,7 +151,7 @@ Low Memory Addresses (0x0000_0000_0000_0000)
 
 When `main()` is called, the function's **prologue** (compiler-generated instructions at the beginning of the function) creates a stack frame by adjusting the stack pointer (typically `sub rsp, N` where N is the size needed for local variables). After all local variables are initialized (right before calling `process_data(x, &s)`), the stack looks like this:
 
-```
+```bob
 STACK (grows downward from high addresses):
 ┌─────────────────────────────────┐
 │                                 │    0x7FFF_FFFF_FFF0 (high address)
@@ -219,7 +219,7 @@ When we call `process_data(x, &s)`, here's what the CPU actually does (x86-64 ca
    - Allocates space for local variables
    - May spill register arguments to stack (compiler's choice)
 
-```
+```bob
 CPU REGISTERS (not in memory!):
 ┌────────────────────────────────────┐
 │  RBP:  0x7FFF_FFFF_FF00            │  Base pointer (main's frame base)
@@ -362,7 +362,7 @@ When `process_data()` returns, two things happen:
 1. **Return value is copied**: The value in `result` (84) is **copied** to `doubled` in main's frame (using CPU register or direct memory copy)
 2. **Stack frame is popped**: process_data's entire frame is destroyed
 
-```
+```bob
 STACK:
 ┌───────────────────────────────────┐
 │                                   │
@@ -523,7 +523,7 @@ v.push(2);                      // adds to heap, len=2, cap=4
 
 **Stack memory layout:**
 
-```
+```bob
 Stack:
 ┌────────────────────────────┐
 │ number: Number             │
@@ -604,7 +604,7 @@ You can think a reference as a safe pointer guaranteed by the compiler.
 
 **What's in memory :**
 
-```
+```bob
 Stack (User Space - lower canonical addresses start with 0x0000):
                          ┌─────────────────────────────┐
  │ 0x0000_7FFF_FFFF_FF00 │  x: i32 = 42                │
@@ -635,7 +635,7 @@ let y_mut_ref: &mut i32 = &mut y;
 // y is now 200
 ```
 
-```
+```bob
 Stack:
 ┌─────────────────────────────┐
 │  y: i32 = 100               │  0x0000_7FFF_FFFF_FF10 (initially 100, then 200)
@@ -816,7 +816,7 @@ Unlike `Vec`, raw pointers don't do bounds checking! `Vec` would panic on `vec[3
 
 After \*ptr.add(2) = 3, the heap looks like this:
 
-```
+```bob
 Stack (0x7FFF_FFFF_FF00)              Heap (0x5555_8000_0000)
                                    (12 bytes total: 3 × 4-byte i32s)
     ┌─────────────────────┐         ┌─────┐
@@ -1108,7 +1108,7 @@ let v = Vec::new();
 
 **Wrong mental model:**
 
-```
+```bob
 Stack:
 ┌────────────────────┐
 │ v: Vec<i32>        │
@@ -1118,7 +1118,7 @@ Stack:
 
 **Correct mental model:**
 
-```
+```bob
 Stack:                    Heap:
 ┌──────────────┐         ┌──────────┐
 │ v: Vec<i32>  │         │          │

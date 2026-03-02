@@ -234,7 +234,7 @@ A reference to a DST is called a **fat pointer** because it contains extra metad
 ### Fat Pointer Layout
 
 **For slices (`&[T]`) and string slices (`&str`):**
-```
+```bob
 ┌─────────────────────┬─────────────────────┐
 │   Data Pointer      │      Length         │
 │    (8 bytes)        │     (8 bytes)       │
@@ -254,7 +254,7 @@ let slice: &[i32] = &data[1..4];  // [2, 3, 4]
 ```
 
 **For trait objects (`&dyn Trait`):**
-```
+```bob
 ┌─────────────────────┬─────────────────────┐
 │   Data Pointer      │   VTable Pointer    │
 │    (8 bytes)        │     (8 bytes)       │
@@ -338,7 +338,7 @@ println!("{}", std::mem::size_of::<&[i32]>());  // ✅ OK: 16 bytes (fat pointer
 
 The reference has a known size even though the thing it points to doesn't!
 
-```
+```bob
 [i32]           &[i32]
 (unsized)       (sized - 16 bytes)
   ???           ┌─────────┬─────────┐
@@ -359,7 +359,7 @@ println!("{}", std::mem::size_of::<&str>());    // ✅ 16 bytes
 - `str` is the actual text data - variable length
 - `&str` is a fat pointer to text data - always 16 bytes
 
-```
+```bob
 String (24 bytes)          str (unsized)           &str (16 bytes)
 ┌────────────────┐         ??????????              ┌─────────┬─────────┐
 │ ptr ────────┐  │         ?????????               │ ptr     │ len     │

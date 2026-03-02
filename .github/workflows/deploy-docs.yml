@@ -1,0 +1,57 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Cache cargo binaries
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/mdbook
+            ~/.cargo/bin/mdbook-svgbob
+          key: ${{ runner.os }}-cargo-bins-mdbook-0.4.52-svgbob-0.2.2
+          restore-keys: |
+            ${{ runner.os }}-cargo-bins-
+
+      - name: Install mdBook
+        run: |
+          if ! command -v mdbook &> /dev/null || [ "$(mdbook --version | grep -o '0\.4\.52')" != "0.4.52" ]; then
+            cargo install mdbook --version 0.4.52 --force
+          else
+            echo "mdBook 0.4.52 already installed"
+          fi
+
+      - name: Install mdbook-svgbob
+        run: |
+          if ! command -v mdbook-svgbob &> /dev/null; then
+            cargo install mdbook-svgbob
+          else
+            echo "mdbook-svgbob already installed"
+          fi
+
+      - name: Build documentation
+        run: mdbook build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./book
+          keep_files: false
+          force_orphan: false

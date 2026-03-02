@@ -290,7 +290,7 @@ Why slices are special:
 
 A slice `&[T]` is a _view_ into contiguous memory. It's a fat pointer:
 
-```
+```bob
 Slice structure:
 ┌───────────────┬───────────┐
 │ ptr: *const T │ len: usize│
@@ -420,7 +420,7 @@ let slice: &str = &s[0..3];  // "hel"
 
 ### Array: Stack
 
-```
+```bob
 [1, 2, 3]
 
 Stack:
@@ -431,7 +431,7 @@ Stack:
 
 ### Box: Heap (single value)
 
-```
+```bob
 Box::new([1, 2, 3])
 
 Stack:           Heap:
@@ -442,7 +442,7 @@ Stack:           Heap:
 
 ### Vec: Heap (growable)
 
-```
+```bob
 let mut vec = Vec::new();
 vec.push(1);
 vec.push(2);
@@ -461,7 +461,7 @@ Actual data: on heap
 
 ### Slice: View (no ownership)
 
-```
+```bob
 let vec = vec![1, 2, 3, 4, 5];
 let slice = &vec[1..4];  // [2, 3, 4]
 

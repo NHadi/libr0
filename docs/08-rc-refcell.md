@@ -65,7 +65,7 @@ println!("Counter: {}", counter.borrow()); // 2
 
 `Rc<RefCell<T>>` has two levels of tracking in a single allocation:
 
-```
+```bob
 Stack                             Heap
 
 ┌───────────┐
@@ -175,7 +175,7 @@ let node_b = Rc::new(Node {
 
 **Visual representation of the cycle:**
 
-```
+```bob
 Stack                    Heap
 
                        ┌──────────────────────────┐
@@ -224,7 +224,7 @@ This is a **memory leak** - the memory is allocated but never freed. Unlike othe
 
 Remember our cycle problem? Both nodes point to each other:
 
-```
+```bob
 node_a (count: 2) ──→ node_b (count: 2)
     ↑                      │
     └──────────────────────┘
@@ -405,7 +405,7 @@ if let Some(parent) = child1.parent.borrow().upgrade() {
 
 **Visual representation:**
 
-```
+```bob
 ┌─────────────┐
 │    root     │<─.──.──.──.──.──.──.──.──.──.──.──.──.──.
 │   value: 1  │                                         │

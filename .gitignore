@@ -15,6 +15,7 @@ Cargo.lock
 
 # Generated documentation
 /doc/
+/book/
 
 # Backup files
 *.bak
