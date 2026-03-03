@@ -111,14 +111,13 @@ let borrowed = cell.borrow();  // Returns &String (no copy!)
 RefCell uses a simple counter (`borrow_count`) to track the borrow state:
 
 ```bob
-┌────────────────────────────────────┐
-│ RefCell<T>                         │
-│ ┌────────────────────────────────┐ │
-│ │ borrow_count: Cell<isize>      │ │  ← The counter!
-│ │                                │ │     0 = not borrowed
-│ │ value: UnsafeCell<T>           │ │    >0 = # of immutable borrows
-│ └────────────────────────────────┘ │    -1 = mutably borrowed
-└────────────────────────────────────┘
++-----------------------------------+
+| "RefCell<T>"                      |
+| +-------------------------------+ |
+| | "borrow_count: Cell<isize>" <-+-+---- The counter!
+| | "value: UnsafeCell<T>"        | |     " 0 = not borrowed"                                                  
+| +-------------------------------+ |     ">0 = # of immutable borrows"
++-----------------------------------+     "-1 = mutably borrowed"
 ```
 
 How `borrow_count` changes:

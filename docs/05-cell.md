@@ -304,27 +304,31 @@ println!("{}", r1);  // DANGER: r1 still pointing to the value inside the cell!
 
 **Visualizing the problem:**
 
+**Step 1: `cell.get_ref()` returns a reference**
+
 ```bob
-Step 1: cell.get_ref() returns a reference
-┌──────────────┐
-│ Cell<i32>    │
-│ ┌──────────┐ │
-│ │ value: 5 │ │ <───── r1: &i32 points here
-│ └──────────┘ │        Remember, &i32 is immutable!
-└──────────────┘
++---------------+
+| Cell<i32>     |
+| +-----------+ |
+| | value: 5  | | <----- r1: &i32 points here
+| +-----------+ |        Remember, &i32 is immutable!
++---------------+
+```
 
-Step 2: cell.set(10) changes the value
-┌──────────────┐
-│ Cell<i32>    │
-│ ┌──────────┐ │
-│ │ value: 10│ │ <───── r1: &i32 STILL points here!
-│ └──────────┘ │        But r1 is supposed to be immutable!
-└──────────────┘        The data it points to changed!
+**Step 2: `cell.set(10)` changes the value**
 
-BROKEN: r1 points into Cell's memory, and that memory can be mutated.
+```bob
++---------------+
+| Cell<i32>     |
+| +-----------+ |
+| | value: 10 | | <----- r1: &i32 STILL points here!
+| +-----------+ |        But r1 is supposed to be immutable!
++---------------+        The data it points to changed!
+```
+
+**BROKEN:** r1 points into Cell's memory, and that memory can be mutated.
 This violates Rust's aliasing rules: you have an immutable reference (&i32)
 to data that's being mutated.
-```
 
 The problem: `r1` is supposed to be immutable, but the value it points to changed!
 
@@ -340,30 +344,37 @@ cell.set(10);       // Mutate through &self
 println!("{}", n);  // Still reads 5, because n is a copy, not a reference!
 ```
 
+**Initial state:**
+
 ```bob
-Initial state:
-┌──────────────┐
-│ Cell<i32>    │
-│ ┌──────────┐ │
-│ │ value: 5 │ │  ← Value lives inside Cell
-│ └──────────┘ │
-└──────────────┘
++--------------+
+| Cell<i32>    |
+| +----------+ |
+| | value: 5 | |  <- Value lives inside Cell
+| +----------+ |
++--------------+
+```
 
-cell.get() - Returns a COPY:
-┌──────────────┐
-│ Cell<i32>    │
-│ ┌──────────┐ │    copy    ┌────┐
-│ │ value: 5 │ │ ─────────> │ 5  │  ← Copy created in new memory location
-│ └──────────┘ │            └────┘    no reference to Cell's internal value!
-└──────────────┘
+**`cell.get()` - Returns a COPY:**
 
-cell.set(10) - REPLACES the value:
-┌──────────────┐
-│ Cell<i32>    │
-│ ┌──────────┐ │            ┌────┐
-│ │ value:10 │ │            │ 5  │  ← Old value still 5
-│ └──────────┘ │            └────┘
-└──────────────┘
+```bob
++--------------+
+| Cell<i32>    |
+| +----------+ |    copy    +----+
+| | value: 5 | | ---------> | 5  |  <- Copy created in new memory location
+| +----------+ |            +----+    no reference to Cell's internal value!
++--------------+
+```
+
+**`cell.set(10)` - REPLACES the value:**
+
+```bob
++---------------+
+| Cell<i32>     |
+| +-----------+ |            +----+
+| | value: 10 | |            | 5  |  <- Old value still 5
+| +-----------+ |            +----+
++---------------+
 ```
 
 **Key insight**: You never get `&i32` or `&mut i32` pointing to the value inside Cell's box. Only copies come out. The inner value never escapes as a reference.
@@ -495,10 +506,10 @@ let r2 = cell.get_mut();  // ❌ Error: cannot borrow `cell` as mutable more tha
 **Why this defeats Cell's purpose:**
 
 ```bob
-Cell's point:        &Cell<T>  ──set()──>  mutate through &self
+Cell's point:        &Cell<T>  --set()-->  mutate through &self
                                             (interior mutability)
 
-get_mut:        &mut Cell<T>  ──get_mut()──>  &mut T
+get_mut:        &mut Cell<T>  --get_mut()-->  &mut T
                                                (normal mutability)
 ```
 

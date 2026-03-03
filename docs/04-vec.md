@@ -292,11 +292,11 @@ A slice `&[T]` is a _view_ into contiguous memory. It's a fat pointer:
 
 ```bob
 Slice structure:
-┌───────────────┬───────────┐
-│ ptr: *const T │ len: usize│
-└──────│────────┴───────────┘
-       │
-       └──────> [T, T, T] (points to array elements in memory)
++---------------+-----------+
+| ptr: *const T | len: usize|
++------+--------+-----------+
+       |
+       +------> [T, T, T] (points to array elements in memory)
 ```
 
 Convert `Vec<T>` to `&[T]`:
@@ -424,9 +424,9 @@ let slice: &str = &s[0..3];  // "hel"
 [1, 2, 3]
 
 Stack:
-┌────┬────┬────┐
-│ 1  │ 2  │ 3  │
-└────┴────┴────┘
++----+----+----+
+| 1  | 2  | 3  |
++----+----+----+
 ```
 
 ### Box: Heap (single value)
