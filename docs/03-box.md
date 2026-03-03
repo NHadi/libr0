@@ -81,12 +81,16 @@ The **heap** is for dynamic allocation:
 4. Automatically frees the memory when dropped
 
 ```bob
-Stack              Heap
-┌─────────┐       ┌─────────┐
-│ Box<T>  │──────>│    T    │
-│ (ptr)   │       │  value  │
-└─────────┘       └─────────┘
-  8 bytes          size of T
+   STACK        |       HEAP
+                |
++---------+     |     +---------+
+| Box<T>  |     |     |    T    |
++---------+     |     +---------+
+|  ptr *--+-----+---->|  value  |
++---------+     |     +---------+
+  8 bytes       |       size of T
+                |
+
 ```
 
 ## Why Use Box?
@@ -101,6 +105,28 @@ enum List {
     Nil,
 }
 ```
+
+**Memory layout without Box (infinite, this confuses the compiler!):**
+
+```bob
++-------------------------------+
+| Cons                          |
++-----+-------------------------+ 
+| i32 | Cons                    | 
+|     +-------------------------+ 
+|     | i32 | Cons              | 
+|     |     +-----+-------------+ 
+|     |     | i32 | Cons        | 
+|     |     |     +-----+-------+ 
+|     |     |     | i32 | Cons  | 
+|     |     |     |     +-------+
+|     |     |     |     | ...   |
++-----+-----+-----+-----+-------+
+
+  ... infinite nesting!
+```
+
+The compiler tries to calculate: `size(List) = 4 + size(List) = 4 + 4 + size(List) = ...` - it never ends.
 
 Fixed with `Box`:
 
@@ -125,42 +151,25 @@ The `T` in `Box<T>` is only a **generic parameter** - it tells the compiler what
 
 So `Box<List>` doesn't contain a `List`. It contains a _pointer_ to a `List` somewhere. The size of `Box<List>` is always 8 bytes, regardless of what `List` is.
 
-**Memory layout without Box (infinite, this confuses the compiler!):**
+
+**Memory layout with Box, fixed!:**
 
 ```bob
-Cons(i32, List)
-├─ i32: 4 bytes
-└─ List: ?
-   ├─ Cons(i32, List)
-   │  ├─ i32: 4 bytes
-   │  └─ List: ?
-   │     ├─ Cons(i32, List)
-   │     │  ├─ i32: 4 bytes
-   │     │  └─ List: ?
-   │     │     └─ ... forever
-```
-
-The compiler tries to calculate: `size(List) = 4 + size(List) = 4 + 4 + size(List) = ...` - it never ends.
-
-**Memory layout with Box (fixed!):**
-
-```bob
-        STACK                           HEAP
-┌─────────────────────┐       ┌─────────────────────┐
-│ List::Cons          │       │ List::Cons          │
-│ ┌─────────────────┐ │       │ ┌─────────────────┐ │
-│ │ i32: 4 bytes    │ │       │ │ i32: 4 bytes    │ │
-│ ├─────────────────┤ │       │ ├─────────────────┤ │
-│ │ ptr: 0x1000 ────┼─┼──────>│ │ ptr: 0x2000 ────┼─┼──┐
-│ │ (8 bytes)       │ │       │ │ (8 bytes)       │ │  │
-│ └─────────────────┘ │       │ └─────────────────┘ │  │
-│ Total: 12 bytes     │       │ Total: 12 bytes     │  │
-└─────────────────────┘       └─────────────────────┘  │
-                                                       │
-                              ┌─────────────────────┐  │
-                              │ List::Nil  (0x2000) │<─┘
-                              │ (no data)           │
-                              └─────────────────────┘
+        STACK              |              HEAP
+                           |
++---------------------+    |    +---------------------+
+| Cons                |    |    | Cons                |
++---------------------+    |    +---------------------+
+| i32 "(4 bytes)"     |    |    | i32: 4 bytes        |
++---------------------+    |    +---------------------+    +---------------------+
+| ptr: *--------------+----+--->| ptr: *--------------+--->| List::Nil           |
+|  "(8 bytes)"        |    |    |  "(8 bytes)"        |    +---------------------+
++---------------------+    |    +---------------------+   
+| Total: 12 bytes     |    |    | Total: 12 bytes     |   
++---------------------+    |    +---------------------+   
+                           |
+                           |
+                           |
 ```
 
 The arrows show where each pointer **points to** in memory (addresses like `0x1000`, `0x2000`). The Box itself is just 8 bytes storing an address.
@@ -497,35 +506,41 @@ After `into_inner()`:
 **Before `into_inner()`:**
 
 ```bob
-        STACK         │      HEAP
-                      │
-   boxed: Box0       │     String struct (24 bytes)
-   ┌───────────────┐  │    ┌───────────────────┐
-   │ ptr: 0x1000 ──┼──┼──→ │ ptr: 0x3000 ──┐   │
-   └───────────────┘  │    │ len: 5        │   │
-   8 bytes            │    │ cap: 5        │   │
-                      │    └───────────────┼───┘
-                      │                    ↓
-                      │    ┌───────────────────┐
-                      │    │  "hello" (5 bytes)│
-                      │    │  [h][e][l][l][o]  │
-                      │    └───────────────────┘
-                      │
+        STACK             |       HEAP
+                          | 
+   +---------------+      |     +------------------+
+   | boxed: Box0   |      |     | String struct    |
+   +---------------+      |     +------------------+
+   | ptr: *--------+------+---->| "ptr:"*-----.    |
+   +---------------+      |     | "len:"5      |   |
+   8 bytes                |     | "cap:"5      |   |
+                          |     +--------------+---+
+                          |                    |
+                          |                    v
+                          |                  +---+---+---+---+---+
+                          |                  | h | e | l | l | o |  "(5 bytes)"
+                          |                  +---+---+---+---+---+
 ```
 
 **After `into_inner()`:**
 
 ```bob
-        STACK         │      HEAP
-                      │
-   s: String          │     (String struct's heap memory freed!)
-   ┌───────────────┐  │
-   │ ptr: 0x3000 ──┼──┼──→┌───────────────────┐
-   │ len: 5        │  │   │  "hello" (5 bytes)│
-   │ cap: 5        │  │   │  [h][e][l][l][o]  │
-   └───────────────┘  │   └───────────────────┘
-   24 bytes           │
-                      │
+        STACK             |        HEAP
+                          |  
+   .---------------.      |      .------------------.
+   | boxed: Box0   |      |      : String struct    :
+   | "(consumed)"  |      |      : "(freed!)"       :
+   '---------------'      |      '------------------'
+                          |  
+   +---------------+      |      
+   | s: String     |      |      
+   +---------------+      |      +---+---+---+---+---+
+   | "ptr:"*-------+------+----->| h | e | l | l | o |  "(5 bytes)"
+   | "len:"5       |      |      +---+---+---+---+---+
+   | "cap:"5       |      |  
+   +---------------+      |  
+   24 bytes               |  
+                          |  
 ```
 
 The String still owns its heap-allocated data - we just moved the String struct itself from heap to stack!

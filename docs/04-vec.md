@@ -292,11 +292,16 @@ A slice `&[T]` is a _view_ into contiguous memory. It's a fat pointer:
 
 ```bob
 Slice structure:
-+---------------+-----------+
-| ptr: *const T | len: usize|
-+------+--------+-----------+
++---------------+-------------+
+| ptr: *const T | len: usize  |
+|      *        |             |
++------|--------+-------------+
+       |  
+       | "(points to array elements in memory)"
        |
-       +------> [T, T, T] (points to array elements in memory)
+       |       +---+---+---+
+       +------>| T | T | T | 
+               +---+---+---+
 ```
 
 Convert `Vec<T>` to `&[T]`:
@@ -420,10 +425,10 @@ let slice: &str = &s[0..3];  // "hel"
 
 ### Array: Stack
 
-```bob
-[1, 2, 3]
+`[1, 2, 3]`
 
-Stack:
+```bob
+    Stack
 +----+----+----+
 | 1  | 2  | 3  |
 +----+----+----+
@@ -431,29 +436,29 @@ Stack:
 
 ### Box: Heap (single value)
 
-```bob
-Box::new([1, 2, 3])
+**`Box::new([1, 2, 3])`**
 
-Stack:           Heap:
-┌─────┐         ┌───┬───┬───┐
-│ ptr │────────>│ 1 │ 2 │ 3 │
-└─────┘         └───┴───┴───┘
+```bob
+Stack               Heap
++-------+         +---+---+---+
+| ptr *-+-------->| 1 | 2 | 3 |
++-------+         +---+---+---+
 ```
 
 ### Vec: Heap (growable)
 
-```bob
-let mut vec = Vec::new();
-vec.push(1);
-vec.push(2);
-vec.push(3);
+**After `vec.push(1); vec.push(2); vec.push(3); ... ; vec.push(7)`**
 
-Stack:                  Heap:
-┌─────┬─────┬─────┐   ┌────┬────┬────┬────┬────┬────┐
-│ ptr │ len │ cap │   │ 1  │ 2  │ 3  │ ?  │ ?  │ ?  │
-│  •  │  3  │  6  │   └────┴────┴────┴────┴────┴────┘
-└──│──┴─────┴─────┘    ^
-   └───────────────────┘
+```bob
+       STACK         |                HEAP
+                     |
++-----------------+  |
+| vec: Vec<i32>   |  |        <-------- len ---------->
++-----+-----+-----+  |      +---+---+---+---+---+---+---+---+---+---+
+| "ptr:" *--------+--|----->| 1 | 2 | 3 | 4 | 5 | 6 | 7 | ? | ? | ? |
+| "len:" 7        |  |      +---+---+---+---+---+---+---+---+---+---+
+| "cap:" 10       |  |        <------------ capacity ------------->
++-----+-----+-----+  |
 ```
 
 `Vec` on stack: 24 bytes (on 64-bit: 8 + 8 + 8)
@@ -461,24 +466,28 @@ Actual data: on heap
 
 ### Slice: View (no ownership)
 
+**`let slice = &vec[1..5]; // [2, 3, 4, 5, 6]`**
+
 ```bob
-let vec = vec![1, 2, 3, 4, 5];
-let slice = &vec[1..4];  // [2, 3, 4]
-
-Stack (vec):            Heap:
-┌─────┬─────┬─────┐   ┌───┬───┬───┬───┬───┐
-│ ptr │ len │ cap │   │ 1 │ 2 │ 3 │ 4 │ 5 │
-│  •  │  5  │  5  │   └───┴───┴───┴───┴───┘
-└──│──┴─────┴─────┘         ^
-   └────────────────────────┤
-Stack (slice):              │
-┌─────┬─────┐               │
-│ ptr │ len │               │
-│  •  │  3  │               │
-└──│──┴─────┘               │
-   └────────────────────────┘ (points to 2nd element)
-```
-
+       STACK         |                    HEAP 
+                     |       
++-----------------+  | "index:"0   1   2   3   4   5   6   7   8   9
+| vec: Vec<i32>   |  | "slice:"    1     "..."     5
++-----+-----+-----+  |       +---+---+---+---+---+---+---+---+---+---+
+| "ptr:" *--------+--|------>| 1 | 2 | 3 | 4 | 5 | 6 | 7 | ? | ? | ? |
+| "len:" 7        |  |       +---+-^-+---+---+---+---+---+---+---+---+
+| "cap:" 10       |  |             |----- len ----->
++-----+-----+-----+  |             |
+                     |             |        
+                     |             |       
++---------------+    |             |
+| slice: &[i32] |    |             |
++---------------+    |             |
+| "ptr:" *------+----+-------------'
+| "len:" 5      |    | 
++---------------+    | 
+```                  
+                    
 ## Common Operations
 
 ### Creating a Vec
@@ -681,7 +690,3 @@ But this defeats the purpose of the exercise - we want to see what we can build 
 - Automatic coercion from arrays: `&[1, 2, 3]` → `MySlice` (compiler magic)
 
 This demonstrates why slices are special - they need compiler integration for the syntax we take for granted!
-
-## Next Chapter
-
-[Cell](./05-cell.md) - Interior mutability for `Copy` types.
