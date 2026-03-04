@@ -66,21 +66,22 @@ println!("Counter: {}", counter.borrow()); // 2
 `Rc<RefCell<T>>` has two levels of tracking in a single allocation:
 
 ```bob
-Stack                             Heap
-
-┌───────────┐
-│  counter  │                    ┌──────────────────────────────┐
-│  (Rc ptr) │───────┬───────────>│ Single RcInner allocation:   │
-└───────────┘       │            │  strong_count: 3             │ ← Rc tracks # of owners
-┌───────────┐       │            │  weak_count: 0               │
-│ counter1  │       │            │                              │
-│  (Rc ptr) │───────┤            │  RefCell<i32> (inlined):     │
-└───────────┘       │            │    borrow: 0                 │ ← RefCell tracks borrows
-┌───────────┐       │            │    value: 2                  │ (after two increments)
-│ counter2  │       │            │                              │
-│  (Rc ptr) │───────┘            └──────────────────────────────┘
-└───────────┘
-                                   One shared allocation on heap
+     STACK                |           HEAP
+                          |
++-------------+           |  +-----------------------+
+|"counter: Rc"|           |  | RcInner               |
+|"ptr:" *-----+------+----+->+-----------------------+
++-------------+      |    |  | "strong_count: 3"  <--+--- Rc tracks # of owners
+                     |    |  | "weak_count: 0"       |
++--------------+     |    |  |         +-------------+
+|"counter1: Rc"|     |    |  | "value:"|RefCell<i32> |
+|"ptr:"*-------+-----+    |  |         | "borrow:"0  |<-- RefCell tracks borrows   
++--------------+     |    |  |         |  "value:"2  |   "(after two increments)"
+                     |    |  |         +-------------+ 
++--------------+     |    |  +-----------------------+
+|"counter2: Rc |     |    |
+|"ptr:"*-------+-----+    |
++--------------+          |
 ```
 
 **Two kinds of tracking:**
@@ -176,25 +177,26 @@ let node_b = Rc::new(Node {
 **Visual representation of the cycle:**
 
 ```bob
-Stack                    Heap
-
-                       ┌──────────────────────────┐
-┌─────────┐            │ Rc<Node> for node_a      │
-│ node_a  │───────────>│ strong_count: 2          │
-└─────────┘            │ value: 1                 │
-                       │ next: Some(Rc) ───────┐  │
-                       └───────────────────────┼──┘
-                                             ▲ │
-                                             │ │
-                                             │ ▼
-                       ┌─────────────────────┼────┐
-┌─────────┐            │ Rc<Node> for node_b │    │
-│ node_b  │───────────>│ strong_count: 2     │    │
-└─────────┘            │ value: 2            │    │
-                       │ next: Some(Rc) ─────┘    │
-                       └──────────────────────────┘
-
-                         Circular reference!
+    STACK         |              HEAP
+                  |
++------------+    |     +--------------------+
+|"node_a: Rc"|----|---->| RcInner<Node>      |<--.
++------------+    |     +--------------------+   |
+                  |     | "strong_count:"2   |   |
+                  |     | "value:"1          |   |
+                  |     | "next: Rc" *       |   |
+                  |     +------------|-------+   |
+                  |               .--'           |
+                  |               |              |
+                  |               v              |
++------------+    |     +--------------------+   |
+|"node_b: Rc"|----|---->| RcInner<Node>      |   |
++------------+    |     +--------------------+   |
+                  |     | "strong_count:"2   |   |
+                  |     | "value:"2          |   |
+                  |     | "next: Rc" *-------+---'
+                  |     +--------------------+
+                  |      
 ```
 
 **When the stack variables drop:**
@@ -225,9 +227,10 @@ This is a **memory leak** - the memory is allocated but never freed. Unlike othe
 Remember our cycle problem? Both nodes point to each other:
 
 ```bob
-node_a (count: 2) ──→ node_b (count: 2)
-    ↑                      │
-    └──────────────────────┘
+ "node_a" ---> "inner node_a" ----> "inner node_b"  <-- "node_b"
+               "(count: 2)"         "(count: 2)"
+                    ^                     │
+                    └─────────────────────┘
 ```
 
 When we drop both variables, the counts go from 2 to 1, but never reach 0. **The nodes keep each other alive forever.**
@@ -406,25 +409,26 @@ if let Some(parent) = child1.parent.borrow().upgrade() {
 **Visual representation:**
 
 ```bob
-┌─────────────┐
-│    root     │<─.──.──.──.──.──.──.──.──.──.──.──.──.──.
-│   value: 1  │                                         │
-└─────┬───────┘                                         .
-      │                                                 │
-      │ Strong references (parent owns children)        .
-      │                                                 │
-      ├──────────────┬──────────────┐                   .
-      ▼              ▼              ▼                   │
-┌──────────┐   ┌──────────┐   ┌──────────┐              .
-│  child1  │   │  child2  │   │  child3  │              │
-│ value: 2 │   │ value: 3 │   │ value: 4 │              .
-└──────────┘   └──────────┘   └──────────┘              │
-      │              │              │                   .
-      .──.──.──.──.──.──.──.──.──.──.                   │
-                     │                                  .
-           Weak references (children don't own parent)  │
-                     │                                  .
-                     .──.──.──.──.──.──.──.──.──.──.──.─┘
++-------------+
+|    root     |<~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.
+|  "value:"1  |                               :
++------+------+                               :
+       |                                      :
+       | Strong refs, parent owns children    :
+       |                                      :
+       +----------+--------------+            :
+       |          |              |            :
+       v          v              v            :
++-----------+ +-----------+ +-----------+     :
+|  child1   | |  child2   | |  child3   |     :
+| "value: 2"| | "value: 3"| | "value: 4"|     :
++------:----+ +-----:-----+ +-----:-----+     :
+       :            :             :           :
+       '~~~~~~~~~~~~+~~~~~~~~~~~~~'           :
+                    :                         :
+   Weak, children do:not own parent           :
+                    :                         :
+                    '~~~~~~~~~~~~~~~~~~~~~~~~~'
 ```
 
 **Why this works:**
