@@ -58,7 +58,7 @@ jobs:
         run: mdbook-mermaid install
 
       - name: Build documentation
-        run: mdbook build
+        run: ./build.sh
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
