@@ -3,7 +3,7 @@
 [![Deploy Documentation](https://github.com/arinal/libr0/actions/workflows/deploy-docs.yml/badge.svg)](https://github.com/arinal/libr0/actions/workflows/deploy-docs.yml)
 
 <div class="landing-hero">
-  <img src="libr0-logo.svg" alt="libr0 logo" class="landing-logo">
+  <img src="theme/libr0-logo.svg" alt="libr0 logo" class="landing-logo">
   <h1 class="landing-title">libr0</h1>
   <p class="landing-subtitle">Building Rust's Standard Library from Scratch</p>
   <p class="landing-description">
@@ -11,7 +11,7 @@
     from simple enums to async runtime internals.
   </p>
   <div class="landing-actions">
-    <a href="docs/01-option.html" class="btn-primary">Start Learning</a>
+    <a href="https://arinal.github.io/libr0/" class="btn-primary">Read Online</a>
     <a href="https://github.com/arinal/libr0" class="btn-secondary">
       <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
         <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
@@ -88,55 +88,7 @@ For low-level concepts (syscalls, process memory, blocking vs non-blocking opera
 
 ## Table of Contents
 
-<div class="feature-grid">
-  <div class="feature-card">
-    <div class="feature-icon">📦</div>
-    <h3><a href="docs/01-option.html">Option</a></h3>
-    <p>Start with enums. Learn pattern matching basics with <code>Some(T)</code> and <code>None</code> variants.</p>
-  </div>
-
-  <div class="feature-card">
-    <div class="feature-icon">⚠️</div>
-    <h3><a href="docs/02-result.html">Result</a></h3>
-    <p>Error handling with <code>Ok(T)</code> and <code>Err(E)</code>. Learn the <code>?</code> operator and error propagation.</p>
-  </div>
-
-  <div class="feature-card">
-    <div class="feature-icon">📮</div>
-    <h3><a href="docs/03-box.html">Box</a></h3>
-    <p>First heap allocation. Understand stack vs heap and the <code>Deref</code> trait.</p>
-  </div>
-
-  <div class="feature-card">
-    <div class="feature-icon">📚</div>
-    <h3><a href="docs/04-vec.html">Vec</a></h3>
-    <p>Growable arrays with capacity management. Learn why <code>String</code> is just <code>Vec&lt;u8&gt;</code>.</p>
-  </div>
-
-  <div class="feature-card">
-    <div class="feature-icon">🔒</div>
-    <h3><a href="docs/05-cell.html">Cell</a></h3>
-    <p>Copy-based interior mutability with <code>UnsafeCell</code> under the hood.</p>
-  </div>
-
-  <div class="feature-card">
-    <div class="feature-icon">🔓</div>
-    <h3><a href="docs/06-refcell.html">RefCell</a></h3>
-    <p>Runtime borrow checking with guard types and borrow tracking.</p>
-  </div>
-
-  <div class="feature-card">
-    <div class="feature-icon">🔗</div>
-    <h3><a href="docs/07-rc.html">Rc</a></h3>
-    <p>Reference counting for shared ownership with strong and weak references.</p>
-  </div>
-
-  <div class="feature-card">
-    <div class="feature-icon">🌐</div>
-    <h3><a href="docs/08-rc-refcell.html">Rc + RefCell</a></h3>
-    <p>Shared mutable state. Build graphs, trees with parent pointers, observer patterns.</p>
-  </div>
-</div>
+**Read the full book at [arinal.github.io/libr0](https://arinal.github.io/libr0/)**
 
 ### Part 1: Foundational Types
 
@@ -304,8 +256,8 @@ The documentation site is built using mdBook with a custom landing page:
 # Build the documentation (use this instead of mdbook build)
 ./build.sh
 
-# Or serve locally with auto-reload
-mdbook serve --open
+# Or build and serve locally
+./build.sh serve
 ```
 
 **Note:** The `build.sh` script builds the mdBook and replaces the generated index.html with our custom landing page (from `theme/landing.html`). When you click "Start Learning", you'll navigate to the actual book content starting with the Introduction.
