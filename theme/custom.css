@@ -3,6 +3,8 @@
 
 :root {
     --rust-orange: #CE422B;
+    --rust-orange-dark: #B53A25;
+    --rust-orange-light: #E05A43;
     --tokio-magenta: #c83895;
     --tokio-magenta-dark: #a82d7a;
 }
@@ -326,10 +328,10 @@ body::after {
 }
 
 /* ========================================
-   TOKIO-STYLE MARKDOWN CONTENT
+   TYPOGRAPHY REFINEMENTS
    ======================================== */
 
-/* Headings - all black, clean spacing */
+/* Headings - professional hierarchy with accent decorations */
 #content main h1,
 #content main h2,
 #content main h3,
@@ -337,38 +339,75 @@ body::after {
     color: #000000 !important;
 }
 
+/* H1 - Chapter title with orange accent */
 #content main h1 {
-    font-size: 2.5rem;
-    font-weight: 400;
-    margin: 0 0 0.5rem 0;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e5e5e5;
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid rgba(206, 66, 43, 0.3);
+    color: var(--rust-orange) !important;
+    letter-spacing: -0.02em;
 }
 
-#content main h2 { font-size: 1.75rem; font-weight: 500; margin: 2.5rem 0 1rem 0; }
-#content main h3 { font-size: 1.4rem; font-weight: 500; margin: 2rem 0 0.75rem 0; }
-#content main h4 { font-size: 1.1rem; font-weight: 600; margin: 1.5rem 0 0.5rem 0; }
+/* H2 - with subtle bottom accent */
+#content main h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 2.5rem 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    position: relative;
+}
+
+#content main h2::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: var(--rust-orange);
+    border-radius: 1px;
+}
+
+/* H3 - slightly bolder */
+#content main h3 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin: 2rem 0 0.75rem 0;
+    color: #1a1a1a !important;
+}
+
+#content main h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.5rem 0;
+}
 
 /* Remove heading decorations */
 #content main h1::before,
-#content main h2::before,
 #content main h3::before,
 #content main h4::before { display: none; }
+/* Keep h2::after (accent underline) but remove any default ::before */
+#content main h2::before { display: none; }
 
 /* Heading anchor links - black */
 #content main a.header {
-    color: #000000 !important;
+    color: inherit !important;
     text-decoration: none;
 }
 
-/* Text */
+/* Body text refinement */
 #content main p {
     line-height: 1.8;
     margin: 0 0 1.2em 0;
+    color: #2d2d2d;
 }
 
 #content main strong {
     font-weight: 600;
+    color: #111111;
 }
 
 /* Lists */
@@ -379,23 +418,25 @@ body::after {
 }
 
 #content main li {
-    margin: 1rem 0;
+    margin: 0.6rem 0;
     line-height: 1.8;
 }
 
 #content main ul li::marker {
     color: var(--tokio-magenta);
-    font-size: 1.2em;
+    font-size: 1.1em;
 }
 
 #content main ol li::marker {
-    font-weight: 600;
+    font-weight: 700;
+    color: var(--rust-orange);
 }
 
 /* Links */
 #content main a {
     color: var(--tokio-magenta);
     text-decoration: none;
+    transition: color 0.2s;
 }
 
 #content main a:hover {
@@ -403,30 +444,37 @@ body::after {
     text-decoration: underline;
 }
 
-/* Inline code */
+/* Inline code - Rust orange tinted */
 #content main code {
-    background: #f0f0f0;
-    padding: 0.2em 0.4em;
-    border-radius: 3px;
-    font-size: 0.9em;
-    font-family: 'SF Mono', Monaco, monospace;
+    background: rgba(206, 66, 43, 0.06);
+    color: var(--rust-orange);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-size: 0.88em;
+    font-weight: 500;
+    font-family: 'SF Mono', Monaco, 'Courier New', monospace;
 }
 
 #content main a code {
     color: var(--tokio-magenta);
+    background: rgba(200, 56, 149, 0.06);
 }
 
 /* Code blocks */
 #content main pre {
-    background: #f6f8fa;
-    border-radius: 4px;
+    background: #1e1e2e;
+    border-radius: 8px;
     padding: 16px;
     margin: 1.5em 0;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    position: relative;
 }
 
 #content main pre code {
     background: none;
     padding: 0;
+    color: #cdd6f4;
+    font-weight: 400;
 }
 
 #content main pre pre {
@@ -435,38 +483,147 @@ body::after {
     margin: 0;
 }
 
-/* Special backgrounds for diagram blocks */
+/* ========================================
+   ENHANCED MEMORY DIAGRAM STYLING
+   ======================================== */
 
-/* Bob diagrams (rendered as SVG) */
+/* Bob diagrams (rendered as SVG) - professional container */
 #content main div:has(svg.svgbob) {
-    background: #fff8f0;
+    background: linear-gradient(135deg, #fff9f5 0%, #fff5ed 100%);
+    border: 1px solid rgba(206, 66, 43, 0.12);
     border-left: 4px solid var(--rust-orange);
-    border-radius: 4px;
-    padding: 16px;
+    border-radius: 8px;
+    padding: 20px 24px;
     margin: 1.5em 0;
+    position: relative;
+    overflow-x: auto;
+    box-shadow:
+        0 1px 3px rgba(206, 66, 43, 0.06),
+        0 4px 12px rgba(0, 0, 0, 0.04);
+    transition: all 0.25s ease;
 }
+
+/* Diagram label badge */
+#content main div:has(svg.svgbob)::before {
+    content: 'Memory Layout';
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--rust-orange);
+    background: rgba(206, 66, 43, 0.08);
+    padding: 2px 8px;
+    border-radius: 4px;
+    opacity: 0.7;
+}
+
+/* Hover interaction */
+#content main div:has(svg.svgbob):hover {
+    border-color: rgba(206, 66, 43, 0.3);
+    box-shadow:
+        0 2px 6px rgba(206, 66, 43, 0.1),
+        0 8px 24px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+}
+
+/* SVG itself - ensure clean rendering */
+#content main div:has(svg.svgbob) svg.svgbob {
+    width: 100%;
+    max-width: none;
+}
+
+/* Memory region color classes (applied by diagram-enhance.js) */
+.memory-region-stack rect { fill: rgba(59, 130, 246, 0.08) !important; }
+.memory-region-heap rect { fill: rgba(34, 197, 94, 0.08) !important; }
+.memory-region-bss rect { fill: rgba(234, 179, 8, 0.08) !important; }
+.memory-region-data rect { fill: rgba(249, 115, 22, 0.08) !important; }
+.memory-region-text rect { fill: rgba(107, 114, 128, 0.08) !important; }
+.memory-region-registers rect { fill: rgba(168, 85, 247, 0.08) !important; }
 
 /* Mermaid diagrams */
 #content main div:has(.mermaid),
 #content main pre:has(code.language-mermaid) {
-    background: #f0f9ff;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e8f4fd 100%);
     border-left: 4px solid #0ea5e9;
-    border-radius: 4px;
+    border-radius: 8px;
     padding: 16px;
     margin: 1.5em 0;
+    border: 1px solid rgba(14, 165, 233, 0.12);
+    box-shadow: 0 1px 3px rgba(14, 165, 233, 0.06);
 }
 
-/* Blockquotes - Tokio style with magenta accent */
+/* ========================================
+   SECTION DIVIDERS
+   ======================================== */
+
+#content main hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(206, 66, 43, 0.25) 20%,
+        rgba(206, 66, 43, 0.25) 80%,
+        transparent 100%
+    );
+    margin: 3em 0;
+}
+
+/* ========================================
+   KEY TAKEAWAYS SECTION
+   ======================================== */
+
+.key-takeaways-heading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--rust-orange) !important;
+    padding-bottom: 0.5rem !important;
+    border-bottom: 2px solid var(--rust-orange) !important;
+}
+
+.key-takeaways-heading::after {
+    display: none !important;
+}
+
+.key-takeaways-list {
+    background: linear-gradient(135deg, #fff8f5 0%, #fff5f0 100%);
+    border: 1px solid rgba(206, 66, 43, 0.15);
+    border-radius: 8px;
+    padding: 20px 20px 20px 44px !important;
+    margin: 1em 0 2em 0 !important;
+}
+
+.key-takeaways-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(206, 66, 43, 0.08);
+}
+
+.key-takeaways-list li:last-child {
+    border-bottom: none;
+}
+
+/* ========================================
+   CALLOUT / ADMONITION SYSTEM
+   (classes applied by callouts.js)
+   ======================================== */
+
+/* Base callout style */
 #content main blockquote {
-    border-left: 4px solid var(--tokio-magenta);
-    background: var(--tokio-magenta-light);
-    padding: 1em 1.5em;
+    border-radius: 8px;
+    padding: 16px 20px;
     margin: 1.5em 0;
-    border-radius: 4px;
+    position: relative;
+    border: 1px solid transparent;
+    background: #f8f9fa;
+    border-left: 4px solid #94a3b8;
 }
 
 #content main blockquote p {
-    margin: 0.5em 0;
+    margin: 0.4em 0;
 }
 
 #content main blockquote p:first-child {
@@ -477,35 +634,197 @@ body::after {
     margin-bottom: 0;
 }
 
-/* Tables */
+/* Callout icon */
+.callout-icon {
+    font-size: 1.1rem;
+    margin-right: 6px;
+    font-style: normal;
+}
+
+/* Note - blue */
+#content main blockquote.callout-note {
+    background: #eff6ff;
+    border-color: rgba(37, 99, 235, 0.12);
+    border-left-color: #2563eb;
+}
+
+/* Warning - red */
+#content main blockquote.callout-warning {
+    background: #fef2f2;
+    border-color: rgba(220, 38, 38, 0.12);
+    border-left-color: #dc2626;
+}
+
+/* Important - amber */
+#content main blockquote.callout-important {
+    background: #fffbeb;
+    border-color: rgba(217, 119, 6, 0.12);
+    border-left-color: #d97706;
+}
+
+/* Key Insight - purple */
+#content main blockquote.callout-insight {
+    background: #f5f3ff;
+    border-color: rgba(124, 58, 237, 0.12);
+    border-left-color: #7c3aed;
+}
+
+/* Tip - green */
+#content main blockquote.callout-tip {
+    background: #ecfdf5;
+    border-color: rgba(5, 150, 105, 0.12);
+    border-left-color: #059669;
+}
+
+/* Implementation Note - gray */
+#content main blockquote.callout-impl {
+    background: #f9fafb;
+    border-color: rgba(107, 114, 128, 0.12);
+    border-left-color: #6b7280;
+}
+
+/* ========================================
+   CODE BLOCK ENHANCEMENTS
+   (elements created by code-enhance.js)
+   ======================================== */
+
+/* Enhanced code block container */
+#content main pre.enhanced-code-block {
+    padding-top: 36px;
+}
+
+/* Language label badge */
+.code-lang-label {
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6c7086;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Copy button */
+.code-copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #6c7086;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s;
+    font-family: 'Roboto', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+#content main pre.enhanced-code-block:hover .code-copy-btn {
+    opacity: 1;
+}
+
+.code-copy-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #bac2de;
+}
+
+.code-copy-btn.copied {
+    color: #a6e3a1;
+    border-color: rgba(166, 227, 161, 0.3);
+}
+
+/* ========================================
+   COLLAPSIBLE SECTIONS
+   (elements created by diagram-enhance.js)
+   ======================================== */
+
+.collapsible-summary {
+    cursor: pointer;
+    padding: 10px 16px;
+    background: #f6f8fa;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    list-style: none;
+    transition: all 0.2s;
+    color: #1a1a1a;
+    margin-bottom: 0;
+}
+
+.collapsible-summary:hover {
+    background: #eef0f3;
+}
+
+.collapsible-summary::before {
+    content: '\25B8  ';
+    transition: transform 0.2s;
+    color: var(--rust-orange);
+}
+
+details[open] > .collapsible-summary {
+    border-radius: 6px 6px 0 0;
+    border-bottom-color: transparent;
+}
+
+details[open] > .collapsible-summary::before {
+    content: '\25BE  ';
+}
+
+details[style] {
+    margin: 1em 0;
+}
+
+details[style] > *:not(summary) {
+    padding: 0 4px;
+}
+
+/* ========================================
+   TABLES
+   ======================================== */
+
 #content main table {
     border-collapse: collapse;
     width: 100%;
     margin: 1.5em 0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 #content main table th,
 #content main table td {
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(0, 0, 0, 0.06);
     padding: 0.75em 1em;
     text-align: left;
 }
 
 #content main table th {
-    background: var(--bg-subtle);
+    background: linear-gradient(135deg, #f8f9fa 0%, #f0f1f3 100%);
     font-weight: 600;
-    color: var(--text-primary);
+    color: #111111;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
 }
 
 #content main table td {
-    color: var(--text-primary);
+    color: #2d2d2d;
 }
 
-/* Horizontal rules */
-#content main hr {
-    border: none;
-    border-top: 1px solid var(--border-color);
-    margin: 2.5em 0;
+#content main table tr:hover td {
+    background: rgba(206, 66, 43, 0.02);
 }
 
 /* ========================================
@@ -571,33 +890,46 @@ body::after {
 }
 
 /* ========================================
+   SIDEBAR STYLING
+   ======================================== */
+
+#sidebar a {
+    transition: all 0.15s ease;
+    border-radius: 4px;
+}
+
+#sidebar a:hover {
+    background: rgba(206, 66, 43, 0.06);
+    color: var(--rust-orange);
+}
+
+#sidebar .active {
+    color: var(--rust-orange) !important;
+    font-weight: 600;
+    background: rgba(206, 66, 43, 0.06);
+}
+
+#sidebar .part-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--rust-orange);
+    font-weight: 700;
+    margin-top: 20px;
+}
+
+/* ========================================
    GENERAL IMPROVEMENTS
    ======================================== */
 
 /* Override general pre styling - let main content styles handle it */
 pre {
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
 }
 
 code {
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
-}
-
-/* Better blockquotes */
-blockquote {
-    border-left: 3px solid var(--rust-orange);
-    background: rgba(250, 250, 250, 0.8);
-    padding: 20px 24px;
-    margin: 24px 0;
-    border-radius: 4px;
-}
-
-/* Enhance lists */
-ul li, ol li {
-    margin: 10px 0;
-    line-height: 1.7;
-    color: var(--text-secondary);
 }
 
 /* Clean link styling */
@@ -661,9 +993,16 @@ a img[src*="badge"] {
         gap: 24px;
     }
 
-    h2 {
-        font-size: 2rem;
-        margin: 60px 0 32px 0;
+    #content main h1 {
+        font-size: 1.75rem;
+    }
+
+    #content main h2 {
+        font-size: 1.4rem;
+    }
+
+    .code-copy-btn {
+        opacity: 1;
     }
 }
 
@@ -671,6 +1010,7 @@ a img[src*="badge"] {
    DARK THEME SUPPORT
    ======================================== */
 
+/* Base dark backgrounds */
 .navy body::before,
 .coal body::before,
 .ayu body::before {
@@ -698,4 +1038,269 @@ a img[src*="badge"] {
 .coal .philosophy-item,
 .ayu .philosophy-item {
     background: rgba(22, 27, 34, 0.8);
+}
+
+/* Dark mode: Headings */
+.navy #content main h1,
+.coal #content main h1,
+.ayu #content main h1 {
+    color: var(--rust-orange) !important;
+    border-bottom-color: rgba(206, 66, 43, 0.4);
+}
+
+.navy #content main h2,
+.coal #content main h2,
+.ayu #content main h2 {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+    color: #e5e5e5 !important;
+}
+
+.navy #content main h3,
+.coal #content main h3,
+.ayu #content main h3 {
+    color: #d4d4d4 !important;
+}
+
+.navy #content main h4,
+.coal #content main h4,
+.ayu #content main h4 {
+    color: #c4c4c4 !important;
+}
+
+/* Dark mode: Body text */
+.navy #content main p,
+.coal #content main p,
+.ayu #content main p {
+    color: #b4b4b4;
+}
+
+.navy #content main strong,
+.coal #content main strong,
+.ayu #content main strong {
+    color: #e5e5e5;
+}
+
+/* Dark mode: Inline code */
+.navy #content main code,
+.coal #content main code,
+.ayu #content main code {
+    background: rgba(206, 66, 43, 0.15);
+    color: #f87171;
+}
+
+.navy #content main a code,
+.coal #content main a code,
+.ayu #content main a code {
+    color: #f0abfc;
+    background: rgba(200, 56, 149, 0.12);
+}
+
+/* Dark mode: Memory diagrams */
+.navy #content main div:has(svg.svgbob),
+.coal #content main div:has(svg.svgbob),
+.ayu #content main div:has(svg.svgbob) {
+    background: linear-gradient(135deg, rgba(30, 20, 16, 0.8) 0%, rgba(25, 18, 14, 0.9) 100%);
+    border-color: rgba(206, 66, 43, 0.2);
+}
+
+.navy #content main div:has(svg.svgbob) svg text,
+.coal #content main div:has(svg.svgbob) svg text,
+.ayu #content main div:has(svg.svgbob) svg text {
+    fill: #cdd6f4 !important;
+}
+
+.navy #content main div:has(svg.svgbob) svg path,
+.coal #content main div:has(svg.svgbob) svg path,
+.ayu #content main div:has(svg.svgbob) svg path {
+    stroke: #7f849c !important;
+}
+
+/* Dark mode: Memory region colors */
+.navy .memory-region-stack rect,
+.coal .memory-region-stack rect,
+.ayu .memory-region-stack rect { fill: rgba(59, 130, 246, 0.12) !important; }
+
+.navy .memory-region-heap rect,
+.coal .memory-region-heap rect,
+.ayu .memory-region-heap rect { fill: rgba(34, 197, 94, 0.12) !important; }
+
+.navy .memory-region-bss rect,
+.coal .memory-region-bss rect,
+.ayu .memory-region-bss rect { fill: rgba(234, 179, 8, 0.12) !important; }
+
+.navy .memory-region-data rect,
+.coal .memory-region-data rect,
+.ayu .memory-region-data rect { fill: rgba(249, 115, 22, 0.12) !important; }
+
+.navy .memory-region-text rect,
+.coal .memory-region-text rect,
+.ayu .memory-region-text rect { fill: rgba(107, 114, 128, 0.12) !important; }
+
+.navy .memory-region-registers rect,
+.coal .memory-region-registers rect,
+.ayu .memory-region-registers rect { fill: rgba(168, 85, 247, 0.12) !important; }
+
+/* Dark mode: Mermaid diagrams */
+.navy #content main div:has(.mermaid),
+.coal #content main div:has(.mermaid),
+.ayu #content main div:has(.mermaid),
+.navy #content main pre:has(code.language-mermaid),
+.coal #content main pre:has(code.language-mermaid),
+.ayu #content main pre:has(code.language-mermaid) {
+    background: rgba(14, 165, 233, 0.06);
+    border-color: rgba(14, 165, 233, 0.15);
+}
+
+/* Dark mode: Section dividers */
+.navy #content main hr,
+.coal #content main hr,
+.ayu #content main hr {
+    background: linear-gradient(90deg, transparent, rgba(206, 66, 43, 0.3), transparent);
+}
+
+/* Dark mode: Key Takeaways */
+.navy .key-takeaways-list,
+.coal .key-takeaways-list,
+.ayu .key-takeaways-list {
+    background: rgba(206, 66, 43, 0.06);
+    border-color: rgba(206, 66, 43, 0.2);
+}
+
+.navy .key-takeaways-list li,
+.coal .key-takeaways-list li,
+.ayu .key-takeaways-list li {
+    border-bottom-color: rgba(206, 66, 43, 0.1);
+}
+
+/* Dark mode: Callouts */
+.navy #content main blockquote.callout-note,
+.coal #content main blockquote.callout-note,
+.ayu #content main blockquote.callout-note {
+    background: rgba(37, 99, 235, 0.1);
+    border-color: rgba(37, 99, 235, 0.2);
+    border-left-color: #3b82f6;
+}
+
+.navy #content main blockquote.callout-warning,
+.coal #content main blockquote.callout-warning,
+.ayu #content main blockquote.callout-warning {
+    background: rgba(220, 38, 38, 0.1);
+    border-color: rgba(220, 38, 38, 0.2);
+    border-left-color: #ef4444;
+}
+
+.navy #content main blockquote.callout-important,
+.coal #content main blockquote.callout-important,
+.ayu #content main blockquote.callout-important {
+    background: rgba(217, 119, 6, 0.1);
+    border-color: rgba(217, 119, 6, 0.2);
+    border-left-color: #f59e0b;
+}
+
+.navy #content main blockquote.callout-insight,
+.coal #content main blockquote.callout-insight,
+.ayu #content main blockquote.callout-insight {
+    background: rgba(124, 58, 237, 0.1);
+    border-color: rgba(124, 58, 237, 0.2);
+    border-left-color: #8b5cf6;
+}
+
+.navy #content main blockquote.callout-tip,
+.coal #content main blockquote.callout-tip,
+.ayu #content main blockquote.callout-tip {
+    background: rgba(5, 150, 105, 0.1);
+    border-color: rgba(5, 150, 105, 0.2);
+    border-left-color: #10b981;
+}
+
+.navy #content main blockquote.callout-impl,
+.coal #content main blockquote.callout-impl,
+.ayu #content main blockquote.callout-impl {
+    background: rgba(107, 114, 128, 0.1);
+    border-color: rgba(107, 114, 128, 0.2);
+    border-left-color: #9ca3af;
+}
+
+/* Dark mode: Default blockquote */
+.navy #content main blockquote,
+.coal #content main blockquote,
+.ayu #content main blockquote {
+    background: rgba(148, 163, 184, 0.08);
+    border-left-color: #64748b;
+}
+
+/* Dark mode: Tables */
+.navy #content main table,
+.coal #content main table,
+.ayu #content main table {
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.navy #content main table th,
+.coal #content main table th,
+.ayu #content main table th {
+    background: rgba(255, 255, 255, 0.05);
+    color: #e5e5e5;
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+.navy #content main table td,
+.coal #content main table td,
+.ayu #content main table td {
+    color: #b4b4b4;
+    border-color: rgba(255, 255, 255, 0.04);
+}
+
+/* Dark mode: Collapsible sections */
+.navy .collapsible-summary,
+.coal .collapsible-summary,
+.ayu .collapsible-summary {
+    background: rgba(255, 255, 255, 0.05);
+    color: #d4d4d4;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.navy .collapsible-summary:hover,
+.coal .collapsible-summary:hover,
+.ayu .collapsible-summary:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Dark mode: Sidebar */
+.navy #sidebar a:hover,
+.coal #sidebar a:hover,
+.ayu #sidebar a:hover {
+    background: rgba(206, 66, 43, 0.1);
+}
+
+/* Dark mode: Menu bar */
+.navy #menu-bar,
+.coal #menu-bar,
+.ayu #menu-bar {
+    background-color: var(--bg) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.navy #menu-bar .icon-button,
+.coal #menu-bar .icon-button,
+.ayu #menu-bar .icon-button,
+.navy #menu-bar a,
+.coal #menu-bar a,
+.ayu #menu-bar a,
+.navy #menu-bar i,
+.coal #menu-bar i,
+.ayu #menu-bar i {
+    color: var(--fg) !important;
+}
+
+.navy #menu-bar .icon-button:hover,
+.coal #menu-bar .icon-button:hover,
+.ayu #menu-bar .icon-button:hover,
+.navy #menu-bar a:hover,
+.coal #menu-bar a:hover,
+.ayu #menu-bar a:hover,
+.navy #menu-bar i:hover,
+.coal #menu-bar i:hover,
+.ayu #menu-bar i:hover {
+    color: var(--fg) !important;
 }
