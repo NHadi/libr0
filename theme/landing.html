@@ -3,187 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>libr0 - Building Rust's Standard Library from Scratch</title>
-    <meta name="description" content="Learn Rust by building its standard library from scratch. Understand Option, Box, Vec, Rc, and more.">
+    <title>libr0 - Build Rust's Standard Library from Scratch</title>
+    <meta name="description" content="Learn Rust by building its standard library types from scratch. Understand Option, Box, Vec, Rc, and more through hands-on implementation.">
     <link rel="icon" href="favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="theme/landing.css">
 </head>
 <body>
-    <canvas id="memory-canvas"></canvas>
-
-    <div class="container">
-        <header class="hero">
-            <img src="theme/libr0-logo-animated.svg" alt="libr0 logo" class="logo">
-            <h1 class="title">libr0</h1>
-            <p class="subtitle">Building Rust's Standard Library from Scratch</p>
-            <p class="description">
-                Learn by building. Understand Rust's core types by implementing them yourself,
-                from simple enums to async runtime internals.
-            </p>
-            <div class="actions">
-                <a href="introduction.html" class="btn-primary">Start Learning</a>
-                <a href="https://github.com/NHadi/libr0" class="btn-secondary">
-                    <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-                    </svg>
-                    View on GitHub
+    <!-- Nav -->
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-brand">
+                <img src="theme/libr0-logo.svg" alt="libr0" width="28" height="28">
+                <span>libr0</span>
+            </a>
+            <div class="nav-links">
+                <a href="introduction.html">Docs</a>
+                <a href="https://github.com/NHadi/libr0" target="_blank" rel="noopener">
+                    <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                    GitHub
                 </a>
             </div>
-        </header>
+        </div>
+    </nav>
 
-        <section class="stats">
-            <div class="stat-item">
-                <div class="stat-number">8</div>
-                <div class="stat-label">Chapters</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">191</div>
-                <div class="stat-label">Tests</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">100%</div>
-                <div class="stat-label">Safe APIs</div>
-            </div>
-        </section>
-
-        <section class="content-section">
-            <h2>Learn by Building</h2>
-            <p class="section-intro">
-                <strong>libr0</strong> takes you through Rust's fundamental types from scratch. Each chapter builds on the previous one, showing you exactly how <code>Option</code>, <code>Box</code>, <code>Vec</code>, <code>Rc</code>, and more work under the hood.
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-inner">
+            <div class="hero-badge">Open Source Rust Education</div>
+            <h1 class="hero-title">
+                Build Rust's Standard Library<br>
+                <span class="hero-title-accent">from Scratch</span>
+            </h1>
+            <p class="hero-desc">
+                Understand <code>Option</code>, <code>Box</code>, <code>Vec</code>, <code>Rc</code>, and more by implementing them yourself.
+                No magic, no hand-waving &mdash; just real code and clear explanations.
             </p>
-
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                            <line x1="12" y1="22.08" x2="12" y2="12"/>
-                        </svg>
-                    </div>
-                    <h3><a href="docs/01-option.html">Option</a></h3>
-                    <p>The simplest enum. Pattern matching with <code>Some(T)</code> and <code>None</code>.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                            <line x1="12" y1="9" x2="12" y2="13"/>
-                            <line x1="12" y1="17" x2="12.01" y2="17"/>
-                        </svg>
-                    </div>
-                    <h3><a href="docs/02-result.html">Result</a></h3>
-                    <p>Error handling with <code>Ok(T)</code> and <code>Err(E)</code>. The <code>?</code> operator.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                            <line x1="9" y1="3" x2="9" y2="21"/>
-                        </svg>
-                    </div>
-                    <h3><a href="docs/03-box.html">Box</a></h3>
-                    <p>First heap allocation. Stack vs heap, <code>Deref</code> trait.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="8" y1="6" x2="21" y2="6"/>
-                            <line x1="8" y1="12" x2="21" y2="12"/>
-                            <line x1="8" y1="18" x2="21" y2="18"/>
-                            <line x1="3" y1="6" x2="3.01" y2="6"/>
-                            <line x1="3" y1="12" x2="3.01" y2="12"/>
-                            <line x1="3" y1="18" x2="3.01" y2="18"/>
-                        </svg>
-                    </div>
-                    <h3><a href="docs/04-vec.html">Vec</a></h3>
-                    <p>Growable arrays. Why <code>String</code> is just <code>Vec&lt;u8&gt;</code>.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="5" y="11" width="14" height="10" rx="2" ry="2"/>
-                            <circle cx="12" cy="16" r="1"/>
-                            <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
-                        </svg>
-                    </div>
-                    <h3><a href="docs/05-cell.html">Cell</a></h3>
-                    <p>Interior mutability with <code>UnsafeCell</code> under the hood.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                            <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
-                        </svg>
-                    </div>
-                    <h3><a href="docs/06-refcell.html">RefCell</a></h3>
-                    <p>Runtime borrow checking with guard types.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="18" cy="5" r="3"/>
-                            <circle cx="6" cy="12" r="3"/>
-                            <circle cx="18" cy="19" r="3"/>
-                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                        </svg>
-                    </div>
-                    <h3><a href="docs/07-rc.html">Rc</a></h3>
-                    <p>Reference counting for shared ownership.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="3"/>
-                            <path d="M12 1v6m0 6v6"/>
-                            <path d="m5.64 5.64 4.24 4.24m4.24 4.24 4.24 4.24"/>
-                            <path d="M1 12h6m6 0h6"/>
-                            <path d="m5.64 18.36 4.24-4.24m4.24-4.24 4.24-4.24"/>
-                        </svg>
-                    </div>
-                    <h3><a href="docs/08-rc-refcell.html">Rc + RefCell</a></h3>
-                    <p>Shared mutable state. Build graphs and trees.</p>
-                </div>
+            <div class="hero-actions">
+                <a href="docs/01-option.html" class="btn-primary">Start Reading</a>
+                <a href="https://github.com/NHadi/libr0" class="btn-secondary" target="_blank" rel="noopener">View Source</a>
             </div>
-        </section>
+        </div>
 
-        <section class="content-section">
-            <h2>What Makes libr0 Different?</h2>
-            <div class="philosophy-grid">
-                <div class="philosophy-item">
-                    <h4>De-abstract the Abstractions</h4>
-                    <p>Box? Just alloc + dealloc in a struct. RefCell? Just a counter and panic! We show you exactly how it works.</p>
-                </div>
-                <div class="philosophy-item">
-                    <h4>Show the Memory</h4>
-                    <p>What's in memory? Show the layout. What does the CPU do? Explain the instruction.</p>
-                </div>
-                <div class="philosophy-item">
-                    <h4>Working Code</h4>
-                    <p>Every concept has runnable examples. Understanding comes from code, not theory.</p>
-                </div>
-                <div class="philosophy-item">
-                    <h4>Address Confusion</h4>
-                    <p>We call out common misunderstandings explicitly with clear explanations.</p>
-                </div>
+        <div class="hero-code">
+            <div class="code-header">
+                <span class="code-dot" style="background:#ff5f57"></span>
+                <span class="code-dot" style="background:#febc2e"></span>
+                <span class="code-dot" style="background:#28c840"></span>
+                <span class="code-filename">src/option.rs</span>
             </div>
-        </section>
+            <pre class="code-body"><span class="kw">pub enum</span> <span class="ty">Option0</span>&lt;T&gt; {
+    <span class="variant">Some</span>(T),
+    <span class="variant">None</span>,
+}
 
-        <section class="cta">
-            <h2>Ready to understand Rust deeply?</h2>
-            <a href="introduction.html" class="btn-primary btn-large">Start Learning →</a>
-        </section>
-    </div>
+<span class="kw">impl</span>&lt;T&gt; <span class="ty">Option0</span>&lt;T&gt; {
+    <span class="kw">pub fn</span> <span class="fn">unwrap</span>(<span class="kw-2">self</span>) -> T {
+        <span class="kw">match self</span> {
+            <span class="ty">Option0</span>::<span class="variant">Some</span>(val) => val,
+            <span class="ty">Option0</span>::<span class="variant">None</span> =>
+                <span class="kw">panic!</span>(<span class="str">"called unwrap on None"</span>),
+        }
+    }
+}</pre>
+        </div>
+    </section>
 
-    <script src="theme/landing.js"></script>
+    <!-- Stats -->
+    <section class="stats">
+        <div class="stat">
+            <div class="stat-num">8</div>
+            <div class="stat-label">Chapters</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+            <div class="stat-num">191</div>
+            <div class="stat-label">Tests Passing</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+            <div class="stat-num">100%</div>
+            <div class="stat-label">Safe APIs</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+            <div class="stat-num">0</div>
+            <div class="stat-label">Dependencies</div>
+        </div>
+    </section>
+
+    <!-- Chapters -->
+    <section class="chapters">
+        <div class="section-header">
+            <h2>What You'll Build</h2>
+            <p>Each chapter implements one core type from scratch, with memory diagrams, runnable code, and exercises.</p>
+        </div>
+
+        <div class="chapter-grid">
+            <a href="docs/01-option.html" class="chapter-card">
+                <div class="chapter-num">01</div>
+                <div class="chapter-info">
+                    <h3>Option</h3>
+                    <p>The simplest enum. <code>Some(T)</code> and <code>None</code>, pattern matching, combinators.</p>
+                </div>
+            </a>
+            <a href="docs/02-result.html" class="chapter-card">
+                <div class="chapter-num">02</div>
+                <div class="chapter-info">
+                    <h3>Result</h3>
+                    <p>Error handling done right. <code>Ok(T)</code>, <code>Err(E)</code>, the <code>?</code> operator.</p>
+                </div>
+            </a>
+            <a href="docs/03-box.html" class="chapter-card">
+                <div class="chapter-num">03</div>
+                <div class="chapter-info">
+                    <h3>Box</h3>
+                    <p>Heap allocation, recursive types, <code>Deref</code> and <code>Drop</code> traits.</p>
+                </div>
+            </a>
+            <a href="docs/04-vec.html" class="chapter-card">
+                <div class="chapter-num">04</div>
+                <div class="chapter-info">
+                    <h3>Vec</h3>
+                    <p>Growable arrays with raw allocator APIs. Why <code>String</code> is just <code>Vec&lt;u8&gt;</code>.</p>
+                </div>
+            </a>
+            <a href="docs/05-cell.html" class="chapter-card">
+                <div class="chapter-num">05</div>
+                <div class="chapter-info">
+                    <h3>Cell</h3>
+                    <p>Interior mutability. <code>UnsafeCell</code>, zero-cost abstraction, <code>Copy</code> types.</p>
+                </div>
+            </a>
+            <a href="docs/06-refcell.html" class="chapter-card">
+                <div class="chapter-num">06</div>
+                <div class="chapter-info">
+                    <h3>RefCell</h3>
+                    <p>Runtime borrow checking. Guard types, <code>borrow()</code> vs <code>borrow_mut()</code>.</p>
+                </div>
+            </a>
+            <a href="docs/07-rc.html" class="chapter-card">
+                <div class="chapter-num">07</div>
+                <div class="chapter-info">
+                    <h3>Rc</h3>
+                    <p>Reference counting for shared ownership. Strong vs weak references.</p>
+                </div>
+            </a>
+            <a href="docs/08-rc-refcell.html" class="chapter-card">
+                <div class="chapter-num">08</div>
+                <div class="chapter-info">
+                    <h3>Rc + RefCell</h3>
+                    <p>Shared mutable state. Graphs, trees, cycles, and <code>Weak</code>.</p>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <!-- Approach -->
+    <section class="approach">
+        <div class="section-header">
+            <h2>How It Works</h2>
+            <p>Every chapter follows the same pattern to build deep understanding.</p>
+        </div>
+
+        <div class="approach-grid">
+            <div class="approach-card">
+                <div class="approach-num">1</div>
+                <h4>What problem does it solve?</h4>
+                <p>Start with real motivation. Why does this type exist? What would break without it?</p>
+            </div>
+            <div class="approach-card">
+                <div class="approach-num">2</div>
+                <h4>How does it work inside?</h4>
+                <p>Memory diagrams, struct layouts, and step-by-step walkthroughs. No hand-waving.</p>
+            </div>
+            <div class="approach-card">
+                <div class="approach-num">3</div>
+                <h4>Build it yourself</h4>
+                <p>Implement the type from scratch with runnable examples and exercises.</p>
+            </div>
+            <div class="approach-card">
+                <div class="approach-num">4</div>
+                <h4>Real-world patterns</h4>
+                <p>Common use cases, pitfalls, and how the standard library actually uses it.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta">
+        <h2>Ready to understand Rust deeply?</h2>
+        <p>No more guessing how <code>Box</code>, <code>Vec</code>, or <code>Rc</code> work. Build them and know.</p>
+        <div class="cta-actions">
+            <a href="docs/01-option.html" class="btn-primary btn-large">Start with Chapter 1 &rarr;</a>
+            <a href="https://github.com/NHadi/libr0" class="btn-secondary" target="_blank" rel="noopener">Star on GitHub</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-left">
+                <img src="theme/libr0-logo.svg" alt="libr0" width="20" height="20">
+                <span>libr0 &mdash; Building Rust's Standard Library from Scratch</span>
+            </div>
+            <div class="footer-right">
+                <a href="https://github.com/NHadi/libr0">GitHub</a>
+                <a href="https://github.com/NHadi/libr0/blob/main/LICENSE">MIT License</a>
+                <a href="https://github.com/NHadi/libr0/fork">Fork</a>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>

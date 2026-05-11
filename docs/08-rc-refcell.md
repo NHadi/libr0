@@ -113,7 +113,7 @@ Use when: You have **one owner** who needs to **change which** `Rc` it points to
 
 ```rust
 struct Node {
-    next: RefCell<Option<Rc<Node>>>,  // Can change which node this points to
+    next: RefCell<Option<Rc<Node>>>,  // Can change which node this points to,
 }
 
 let node_a = Rc::new(Node { next: RefCell::new(None) });
@@ -217,14 +217,14 @@ Remember our cycle problem? Both nodes point to each other:
 
 ```mermaid
 flowchart LR
-    node_a["<b>node_a</b>"]
-    node_b["<b>node_b</b>"]
-    inner_a["<b>inner node_a</b><br/>count: 2"]
-    inner_b["<b>inner node_b</b><br/>count: 2"]
-    node_a -->|Rc| inner_a
-    node_b -->|Rc| inner_b
-    inner_a -->|"next (Rc)"| inner_b
-    inner_b -->|"prev (Rc)"| inner_a
+  node_a["<b>node_a</b>"]
+  node_b["<b>node_b</b>"]
+  innerA["<b>inner node_a</b><br/>count: 2"]
+  innerB["<b>inner node_b</b><br/>count: 2"]
+  node_a --> innerA
+  node_b --> innerB
+  innerA --> innerB
+  innerB --> innerA
 ```
 
 When we drop both variables, the counts go from 2 to 1, but never reach 0. **The nodes keep each other alive forever.**
@@ -404,16 +404,16 @@ if let Some(parent) = child1.parent.borrow().upgrade() {
 
 ```mermaid
 flowchart TB
-    root["<b>root</b><br/>value: 1"]
-    child1["<b>child1</b><br/>value: 2"]
-    child2["<b>child2</b><br/>value: 3"]
-    child3["<b>child3</b><br/>value: 4"]
-    root -->|"Rc (strong)"| child1
-    root -->|"Rc (strong)"| child2
-    root -->|"Rc (strong)"| child3
-    child1 -.->|"Weak (non-owning)"| root
-    child2 -.->|"Weak (non-owning)"| root
-    child3 -.->|"Weak (non-owning)"| root
+  root["<b>root</b><br/>value: 1"]
+  child1["<b>child1</b><br/>value: 2"]
+  child2["<b>child2</b><br/>value: 3"]
+  child3["<b>child3</b><br/>value: 4"]
+  root -->|"Strong, parent owns children"| child1
+  root -->|"Strong, parent owns children"| child2
+  root -->|"Strong, parent owns children"| child3
+  child1 -.->|"Weak, children do not own parent"| root
+  child2 -.->|"Weak, children do not own parent"| root
+  child3 -.->|"Weak, children do not own parent"| root
 ```
 
 **Why this works:**
