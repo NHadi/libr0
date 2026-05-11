@@ -359,12 +359,12 @@ h1#libr0 {
 }
 
 #content main ul li::marker {
-    color: var(--rustdoc-blue);
+    color: var(--rustdoc-blue-dark);
 }
 
 #content main ol li::marker {
     font-weight: 600;
-    color: var(--rustdoc-blue);
+    color: #333;
 }
 
 /* Links */
@@ -379,16 +379,18 @@ h1#libr0 {
 
 /* Inline code */
 #content main code {
-    background: var(--bg-code);
-    color: #333;
-    padding: 0.1em 0.4em;
+    background: #eef1f5;
+    color: #1a1a1a;
+    padding: 0.15em 0.45em;
     border-radius: 3px;
-    font-size: 0.88em;
+    font-size: 0.9em;
     font-family: "SF Mono", Monaco, Consolas, "Courier New", monospace;
+    border: 1px solid #dde2e8;
 }
 
 #content main a code {
     color: var(--rustdoc-blue);
+    background: #eef1f5;
 }
 
 /* ========================================
@@ -410,6 +412,8 @@ h1#libr0 {
     padding: 0;
     color: #cdd6f4;
     font-weight: 400;
+    border: none;
+    font-size: inherit;
 }
 
 #content main pre pre {
@@ -591,6 +595,7 @@ h1#libr0 {
 #content main blockquote p {
     margin: 0.3em 0;
     font-size: 0.95em;
+    color: var(--text-primary);
 }
 
 #content main blockquote p:first-child {
