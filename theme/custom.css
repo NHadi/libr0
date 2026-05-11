@@ -750,10 +750,19 @@ details[style] > *:not(summary) {
    SIDEBAR
    ======================================== */
 
+#sidebar {
+    font-size: 1rem !important;
+}
+
+#sidebar .sidebar-scrollbox {
+    font-size: 1rem;
+}
+
 #sidebar a {
     transition: background 0.1s;
     border-radius: 2px;
     font-size: 1rem;
+    padding: 4px 8px;
 }
 
 #sidebar a:hover {
@@ -768,7 +777,7 @@ details[style] > *:not(summary) {
 }
 
 #sidebar .part-title {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--rustdoc-blue);
