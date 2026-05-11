@@ -33,7 +33,7 @@ All implementations use the suffix `0` (e.g., `Option0<T>`, `Vec0<T>`) to distin
 
 ## Running the code
 
-The complete source code is available at [github.com/arinal/libr0](https://github.com/arinal/libr0). You can:
+The complete source code is available at [github.com/NHadi/libr0](https://github.com/NHadi/libr0). You can:
 
 ```bash
 # Run all tests
