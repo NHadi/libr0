@@ -270,6 +270,57 @@ Under the hood, every closure is an anonymous struct that the compiler generates
 - Closures are a **zero-cost abstraction**: the generated struct is exactly the size of the captured data, with no runtime indirection
 - The `extern "rust-call"` ABI efficiently unpacks argument tuples with zero runtime cost
 
+**How the compiler transforms a closure:**
+
+```mermaid
+flowchart TB
+    subgraph input["What you write"]
+        code["let s = String::from('hello');<br/>let closure = &#124;&#124; { let s1 = s; };"]
+    end
+
+    subgraph step1["Step 1: Generate struct"]
+        struct["struct ClosureEnv {<br/>  s: String,<br/>}"]
+    end
+
+    subgraph step2["Step 2: Capture variables"]
+        capture["let closure = ClosureEnv {<br/>  s: s,  // moves s into struct<br/>};"]
+    end
+
+    subgraph step3["Step 3: Implement trait"]
+        traitimpl["impl FnOnce for ClosureEnv {<br/>  fn call_once(self, args) { ... }<br/>}"]
+    end
+
+    subgraph result["When called"]
+        call["closure();<br/>// becomes:<br/>ClosureEnv::call_once(closure, ());"]
+    end
+
+    input --> step1 --> step2 --> step3 --> result
+
+    style input fill:#e8f0fb,stroke:#4d76ae
+    style step1 fill:#f5f3ff,stroke:#7c3aed
+    style step2 fill:#f5f3ff,stroke:#7c3aed
+    style step3 fill:#f5f3ff,stroke:#7c3aed
+    style result fill:#e6f7e6,stroke:#389e0d
+```
+
+**Which trait the compiler chooses:**
+
+```mermaid
+flowchart TD
+    start["Closure captures variables"] --> q1{"Does it move<br/>a captured value?"}
+    q1 -->|Yes| fnonce["FnOnce only<br/><code>fn call_once(self, args)</code>"]
+    q1 -->|No| q2{"Does it mutate<br/>a captured value?"}
+    q2 -->|Yes| fnmut["FnMut<br/><code>fn call_mut(&mut self, args)</code>"]
+    q2 -->|No| fn["Fn<br/><code>fn call(&self, args)</code>"]
+
+    fn -.->|"also implements"| fnmut
+    fnmut -.->|"also implements"| fnonce
+
+    style fnonce fill:#fef2f2,stroke:#d4393a
+    style fnmut fill:#fefce8,stroke:#c27803
+    style fn fill:#e8f0fb,stroke:#4d76ae
+```
+
 ### Example 1: FnOnce Closure (Captures by Value)
 
 When a closure **consumes** a captured variable (moves it), it implements `FnOnce`:
@@ -547,6 +598,26 @@ Notice: The struct **owns** `s` (`String`, not `&String`), and the closure imple
 - **Without `move`**: Variable is captured by reference; ownership transfer happens **when the closure runs** (if moved in body)
 - **With `move`**: Variable ownership is transferred **when the closure is created**
 
+```mermaid
+flowchart LR
+    subgraph without_move["Without move"]
+        w1["let s = String;"] --> w2["closure = &#124;&#124; { let s1 = s; }"]
+        w2 --> w3["ClosureEnv { s: &String }"]
+        w3 --> w4["call_once() moves s"]
+        w4 --> w5["FnOnce only"]
+    end
+
+    subgraph with_move["With move"]
+        m1["let s = String;"] --> m2["closure = move &#124;&#124; { ... }"]
+        m2 --> m3["ClosureEnv { s: String }"]
+        m3 --> m4["call() reads s"]
+        m4 --> m5["Fn + FnMut + FnOnce"]
+    end
+
+    style without_move fill:#fef2f2,stroke:#d4393a
+    style with_move fill:#e6f7e6,stroke:#389e0d
+```
+
 ### When to Use `move`
 
 #### Use Case 1: Returning Closures
@@ -695,6 +766,29 @@ println!("{:?}", data);  // ✅ OK: original Arc still available
 ## Closure Size and Zero-Cost Abstractions
 
 Each closure has a **compiler-generated anonymous type** with fields for each captured variable. The size of a closure equals the size of its captured data:
+
+```mermaid
+flowchart TB
+    subgraph closure["let closure = &#124;&#124; { let _ = x; let _ = y; let _ = z; };"]
+        direction LR
+        subgraph env["Generated ClosureEnv struct (stack)"]
+            xf["x: i32<br/>4 bytes"]
+            yf["y: i32<br/>4 bytes"]
+            zf["z: String<br/>24 bytes"]
+        end
+    end
+
+    subgraph heap["Heap"]
+        heapdata["'hello' (5 bytes)"]
+    end
+
+    zf -->|"ptr points to"| heapdata
+    total["Total closure size: 32 bytes<br/>(only stack metadata counted)"]
+
+    style env fill:#e8f0fb,stroke:#4d76ae
+    style heap fill:#f5f7fa,stroke:#4d76ae
+    style total fill:#e6f7e6,stroke:#389e0d
+```
 
 ```rust
 let x = 5i32;           // 4 bytes
