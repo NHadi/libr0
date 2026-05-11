@@ -290,18 +290,18 @@ Why slices are special:
 
 A slice `&[T]` is a _view_ into contiguous memory. It's a fat pointer:
 
-```bob
-Slice structure:
-+---------------+-------------+
-| ptr: *const T | len: usize  |
-|      *        |             |
-+------|--------+-------------+
-       |  
-       | "(points to array elements in memory)"
-       |
-       |       +---+---+---+
-       +------>| T | T | T | 
-               +---+---+---+
+```mermaid
+flowchart LR
+    subgraph Slice["&amp;#91;T&amp;#93; — fat pointer"]
+        ptr["<b>ptr: *const T</b><br/>*"]
+        len["<b>len: usize</b>"]
+    end
+    subgraph Heap["Heap"]
+        elem0["T"]
+        elem1["T"]
+        elem2["T"]
+    end
+    ptr -->|"points to array elements"| elem0
 ```
 
 Convert `Vec<T>` to `&[T]`:
@@ -427,38 +427,57 @@ let slice: &str = &s[0..3];  // "hel"
 
 `[1, 2, 3]`
 
-```bob
-    Stack
-+----+----+----+
-| 1  | 2  | 3  |
-+----+----+----+
+```mermaid
+flowchart LR
+    subgraph Stack["Stack"]
+        s0["1"]
+        s1["2"]
+        s2["3"]
+    end
 ```
 
 ### Box: Heap (single value)
 
 **`Box::new([1, 2, 3])`**
 
-```bob
-Stack               Heap
-+-------+         +---+---+---+
-| ptr *-+-------->| 1 | 2 | 3 |
-+-------+         +---+---+---+
+```mermaid
+flowchart LR
+    subgraph Stack["Stack"]
+        ptr["<b>ptr *</b>"]
+    end
+    subgraph Heap["Heap"]
+        h0["1"]
+        h1["2"]
+        h2["3"]
+    end
+    ptr -->|points to| h0
 ```
 
 ### Vec: Heap (growable)
 
 **After `vec.push(1); vec.push(2); vec.push(3); ... ; vec.push(7)`**
 
-```bob
-       STACK         |                HEAP
-                     |
-+-----------------+  |
-| vec: Vec<i32>   |  |        <-------- len ---------->
-+-----+-----+-----+  |      +---+---+---+---+---+---+---+---+---+---+
-| "ptr:" *--------+--|----->| 1 | 2 | 3 | 4 | 5 | 6 | 7 | ? | ? | ? |
-| "len:" 7        |  |      +---+---+---+---+---+---+---+---+---+---+
-| "cap:" 10       |  |        <------------ capacity ------------->
-+-----+-----+-----+  |
+```mermaid
+flowchart LR
+    subgraph STACK["STACK — vec: Vec&lt;i32&gt;"]
+        ptr["<b>ptr: *</b>"]
+        len["<b>len: 7</b>"]
+        cap["<b>cap: 10</b>"]
+    end
+    subgraph HEAP["HEAP"]
+        direction LR
+        e1["1"]
+        e2["2"]
+        e3["3"]
+        e4["4"]
+        e5["5"]
+        e6["6"]
+        e7["7"]
+        u1["?"]
+        u2["?"]
+        u3["?"]
+    end
+    ptr -->|"len = 7, capacity = 10"| e1
 ```
 
 `Vec` on stack: 24 bytes (on 64-bit: 8 + 8 + 8)
@@ -468,24 +487,32 @@ Actual data: on heap
 
 **`let slice = &vec[1..5]; // [2, 3, 4, 5, 6]`**
 
-```bob
-       STACK         |                    HEAP 
-                     |       
-+-----------------+  | "index:"0   1   2   3   4   5   6   7   8   9
-| vec: Vec<i32>   |  | "slice:"    1     "..."     5
-+-----+-----+-----+  |       +---+---+---+---+---+---+---+---+---+---+
-| "ptr:" *--------+--|------>| 1 | 2 | 3 | 4 | 5 | 6 | 7 | ? | ? | ? |
-| "len:" 7        |  |       +---+-^-+---+---+---+---+---+---+---+---+
-| "cap:" 10       |  |             |----- len ----->
-+-----+-----+-----+  |             |
-                     |             |        
-                     |             |       
-+---------------+    |             |
-| slice: &[i32] |    |             |
-+---------------+    |             |
-| "ptr:" *------+----+-------------'
-| "len:" 5      |    | 
-+---------------+    | 
+```mermaid
+flowchart LR
+    subgraph STACK_VEC["STACK — vec: Vec&lt;i32&gt;"]
+        vptr["<b>ptr: *</b>"]
+        vlen["<b>len: 7</b>"]
+        vcap["<b>cap: 10</b>"]
+    end
+    subgraph HEAP["HEAP — index: 0 1 2 3 4 5 6 7 8 9"]
+        direction LR
+        h0["1"]
+        h1["2"]
+        h2["3"]
+        h3["4"]
+        h4["5"]
+        h5["6"]
+        h6["7"]
+        h7["?"]
+        h8["?"]
+        h9["?"]
+    end
+    subgraph STACK_SLICE["STACK — slice: &amp;#91;i32&amp;#93;"]
+        sptr["<b>ptr: *</b>"]
+        slen["<b>len: 5</b>"]
+    end
+    vptr -->|"vec owns"| h0
+    sptr -->|"slice views elements 1..6"| h1
 ```                  
                     
 ## Common Operations

@@ -80,17 +80,15 @@ The **heap** is for dynamic allocation:
 3. Keeps a pointer to that memory on the stack
 4. Automatically frees the memory when dropped
 
-```bob
-   STACK        |       HEAP
-                |
-+---------+     |     +---------+
-| Box<T>  |     |     |    T    |
-+---------+     |     +---------+
-|  ptr *--+-----+---->|  value  |
-+---------+     |     +---------+
-  8 bytes       |       size of T
-                |
-
+```mermaid
+flowchart LR
+    subgraph STACK["STACK"]
+        box["<b>Box&lt;T&gt;</b><br/>ptr: 8 bytes"]
+    end
+    subgraph HEAP["HEAP"]
+        val["<b>T</b><br/>value<br/>(size of T)"]
+    end
+    box -->|ptr| val
 ```
 
 ## Why Use Box?
@@ -108,22 +106,14 @@ enum List {
 
 **Memory layout without Box (infinite, this confuses the compiler!):**
 
-```bob
-+-------------------------------+
-| Cons                          |
-+-----+-------------------------+ 
-| i32 | Cons                    | 
-|     +-------------------------+ 
-|     | i32 | Cons              | 
-|     |     +-----+-------------+ 
-|     |     | i32 | Cons        | 
-|     |     |     +-----+-------+ 
-|     |     |     | i32 | Cons  | 
-|     |     |     |     +-------+
-|     |     |     |     | ...   |
-+-----+-----+-----+-----+-------+
-
-  ... infinite nesting!
+```mermaid
+flowchart TB
+    A["<b>Cons</b><br/>i32"]
+    B["<b>Cons</b><br/>i32"]
+    C["<b>Cons</b><br/>i32"]
+    D["<b>Cons</b><br/>i32"]
+    E["..."]
+    A --> B --> C --> D --> E
 ```
 
 The compiler tries to calculate: `size(List) = 4 + size(List) = 4 + 4 + size(List) = ...` - it never ends.
@@ -154,22 +144,17 @@ So `Box<List>` doesn't contain a `List`. It contains a _pointer_ to a `List` som
 
 **Memory layout with Box, fixed!:**
 
-```bob
-        STACK              |              HEAP
-                           |
-+---------------------+    |    +---------------------+
-| Cons                |    |    | Cons                |
-+---------------------+    |    +---------------------+
-| i32 "(4 bytes)"     |    |    | i32: 4 bytes        |
-+---------------------+    |    +---------------------+    +---------------------+
-| ptr: *--------------+----+--->| ptr: *--------------+--->| List::Nil           |
-|  "(8 bytes)"        |    |    |  "(8 bytes)"        |    +---------------------+
-+---------------------+    |    +---------------------+   
-| Total: 12 bytes     |    |    | Total: 12 bytes     |   
-+---------------------+    |    +---------------------+   
-                           |
-                           |
-                           |
+```mermaid
+flowchart LR
+    subgraph STACK["STACK"]
+        cons1["<b>Cons</b><br/>i32 (4 bytes)<br/>ptr (8 bytes)<br/>Total: 12 bytes"]
+    end
+    subgraph HEAP["HEAP"]
+        cons2["<b>Cons</b><br/>i32: 4 bytes<br/>ptr (8 bytes)<br/>Total: 12 bytes"]
+        nil["<b>List::Nil</b>"]
+    end
+    cons1 -->|ptr| cons2
+    cons2 -->|ptr| nil
 ```
 
 The arrows show where each pointer **points to** in memory (addresses like `0x1000`, `0x2000`). The Box itself is just 8 bytes storing an address.
@@ -505,42 +490,32 @@ After `into_inner()`:
 
 **Before `into_inner()`:**
 
-```bob
-        STACK             |       HEAP
-                          | 
-   +---------------+      |     +------------------+
-   | boxed: Box0   |      |     | String struct    |
-   +---------------+      |     +------------------+
-   | ptr: *--------+------+---->| "ptr:"*-----.    |
-   +---------------+      |     | "len:"5      |   |
-   8 bytes                |     | "cap:"5      |   |
-                          |     +--------------+---+
-                          |                    |
-                          |                    v
-                          |                  +---+---+---+---+---+
-                          |                  | h | e | l | l | o |  "(5 bytes)"
-                          |                  +---+---+---+---+---+
+```mermaid
+flowchart LR
+    subgraph STACK["STACK"]
+        boxed["<b>boxed: Box0</b><br/>ptr<br/>(8 bytes)"]
+    end
+    subgraph HEAP["HEAP"]
+        strstruct["<b>String struct</b><br/>ptr<br/>len: 5<br/>cap: 5"]
+        data["h e l l o<br/>(5 bytes)"]
+    end
+    boxed -->|ptr| strstruct
+    strstruct -->|ptr| data
 ```
 
 **After `into_inner()`:**
 
-```bob
-        STACK             |        HEAP
-                          |  
-   .---------------.      |      .------------------.
-   | boxed: Box0   |      |      : String struct    :
-   | "(consumed)"  |      |      : "(freed!)"       :
-   '---------------'      |      '------------------'
-                          |  
-   +---------------+      |      
-   | s: String     |      |      
-   +---------------+      |      +---+---+---+---+---+
-   | "ptr:"*-------+------+----->| h | e | l | l | o |  "(5 bytes)"
-   | "len:"5       |      |      +---+---+---+---+---+
-   | "cap:"5       |      |  
-   +---------------+      |  
-   24 bytes               |  
-                          |  
+```mermaid
+flowchart LR
+    subgraph STACK["STACK"]
+        consumed["<s>boxed: Box0<br/>(consumed)</s>"]
+        s["<b>s: String</b><br/>ptr<br/>len: 5<br/>cap: 5<br/>(24 bytes)"]
+    end
+    subgraph HEAP["HEAP"]
+        freed["<s>String struct<br/>(freed!)</s>"]
+        data["h e l l o<br/>(5 bytes)"]
+    end
+    s -->|ptr| data
 ```
 
 The String still owns its heap-allocated data - we just moved the String struct itself from heap to stack!

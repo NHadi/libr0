@@ -25,7 +25,5 @@ boost-paragraph = 1
 expand = true
 heading-split-level = 3
 
-[preprocessor.svgbob]
-
 [preprocessor.mermaid]
 command = "mdbook-mermaid"

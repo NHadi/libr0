@@ -55,31 +55,24 @@ Now let's see where each piece of data lives in memory.
 
 When your Rust program runs, the operating system gives it a contiguous chunk of virtual memory organized into distinct regions:
 
-```bob
-High Memory Addresses (0x0000_7FFF_FFFF_FFFF - User Space upper bound)
-┌─────────────────────────────────────────────┐
-│              STACK                          │  ← Grows downward
-│  (Function frames, local variables)         │
-├─────────────────────────────────────────────┤
-│                   ↓                         │
-│                                             │
-│              (unused space)                 │
-│                                             │
-│                   ↑                         │
-├─────────────────────────────────────────────┤
-│              HEAP                           │  ← Grows upward
-│  (Dynamically allocated: Box, Vec, String)  │
-├─────────────────────────────────────────────┤
-│        BSS (Uninitialized Data)             │
-│  (static mut with no initializer)           │
-├─────────────────────────────────────────────┤
-│        DATA (Initialized Data)              │
-│  (static, const, string literals)           │
-├─────────────────────────────────────────────┤
-│              TEXT (Code)                    │
-│  (Your compiled functions)                  │
-└─────────────────────────────────────────────┘
-Low Memory Addresses (0x0000_0000_0000_0000)
+```mermaid
+flowchart TB
+    comment_high["<b>High Memory Addresses</b><br/>0x0000_7FFF_FFFF_FFFF - User Space upper bound"]
+    stack["<b>STACK</b> ← Grows downward<br/>Function frames, local variables"]
+    unused["<b>(unused space)</b>"]
+    heap["<b>HEAP</b> ← Grows upward<br/>Dynamically allocated: Box, Vec, String"]
+    bss["<b>BSS</b> - Uninitialized Data<br/>static mut with no initializer"]
+    data["<b>DATA</b> - Initialized Data<br/>static, const, string literals"]
+    text["<b>TEXT</b> - Code<br/>Your compiled functions"]
+    comment_low["<b>Low Memory Addresses</b><br/>0x0000_0000_0000_0000"]
+
+    comment_high --> stack
+    stack --> unused
+    unused --> heap
+    heap --> bss
+    bss --> data
+    data --> text
+    text --> comment_low
 ```
 
 **Key Insight:** The stack and heap grow toward each other!
@@ -92,41 +85,24 @@ Now let's see exactly where each piece of data from our example lives.
 
 Before `main()` even runs, the OS loads static data into the DATA segment:
 
-```bob
-High Memory Addresses (0x0000_7FFF_FFFF_FFFF)
-┌────────────────────────────────────────────┐
-│                   STACK                    │
-│              (empty at start)              │
-├────────────────────────────────────────────┤
-│             (unused space)                 │
-├────────────────────────────────────────────┤
-│                   HEAP                     │
-│              (empty at start)              │
-├────────────────────────────────────────────┤
-│        BSS (Uninitialized Data)            │
-│                                            │
-│  0x6000: BUFFER = [0u8; 10_000]            │
-│          [0][0][0][0]...[0][0][0][0]       │
-│          (10,000 bytes - all zeros)        │
-├────────────────────────────────────────────┤
-│        DATA (Initialized Data)             │
-│                                            │
-│  0x5000: GREETING = "Hello"                │
-│          ├─ ptr:  0x5000  ─┐               │
-│          ├─ len:  5        │               │
-│          └─ "Hello\0"  <───┘               │
-├────────────────────────────────────────────┤
-│              TEXT (Code)                   │
-│                                            │
-│  0x1000: fn main() { ... }                 │
-│  0x2000: fn process_data() { ... }         │
-│  ...    (Rust standard library functions)  │
-│  0x3000: println!() code                   │
-│  0x4000: std::alloc::alloc()               │
-│  0x7000: Vec::push()                       │
-│                                            │
-└────────────────────────────────────────────┘
-Low Memory Addresses (0x0000_0000_0000_0000)
+```mermaid
+flowchart TB
+    comment_high["<b>High Memory Addresses</b><br/>0x0000_7FFF_FFFF_FFFF"]
+    stack["<b>STACK</b><br/>(empty at start)"]
+    unused["<b>(unused space)</b>"]
+    heap["<b>HEAP</b><br/>(empty at start)"]
+    bss["<b>BSS</b> - Uninitialized Data<br/><br/>0x6000: BUFFER = [0u8; 10_000]<br/>[0][0][0][0]...[0][0][0][0]<br/>(10,000 bytes - all zeros)"]
+    data["<b>DATA</b> - Initialized Data<br/><br/>0x5000: GREETING = 'Hello'<br/>ptr: 0x5000<br/>len: 5<br/>'Hello\\0'"]
+    text["<b>TEXT</b> - Code<br/><br/>0x1000: fn main()<br/>0x2000: fn process_data()<br/>... (Rust standard library functions)<br/>0x3000: println!() code<br/>0x4000: std::alloc::alloc()<br/>0x7000: Vec::push()"]
+    comment_low["<b>Low Memory Addresses</b><br/>0x0000_0000_0000_0000"]
+
+    comment_high --> stack
+    stack --> unused
+    unused --> heap
+    heap --> bss
+    bss --> data
+    data --> text
+    text --> comment_low
 ```
 
 > **Note on addresses:** The stack addresses shown (0x7FFF_FFFF_FFFF) are realistic—they represent the upper canonical address range on x86-64 Linux. 
@@ -151,48 +127,31 @@ Low Memory Addresses (0x0000_0000_0000_0000)
 
 When `main()` is called, the function's **prologue** (compiler-generated instructions at the beginning of the function) creates a stack frame by adjusting the stack pointer (typically `sub rsp, N` where N is the size needed for local variables). After all local variables are initialized (right before calling `process_data(x, &s)`), the stack looks like this:
 
-```bob
-STACK (grows downward from high addresses):
-┌─────────────────────────────────┐
-│                                 │    0x7FFF_FFFF_FFF0 (high address)
-│    main()'s stack frame         │
-│                                 │
-│  [Return address]               │  ← Where to return after main
-│  [Saved registers]              │
-│                                 │
-│  x: i32 = 42                    │  ← Local variable (4 bytes)
-│  y: i32 = 100                   │  ← Local variable (4 bytes)
-│                                 │
-│  s: String                      │  ← String struct (24 bytes):
-│    ├─ ptr:  0x8000 ──────┐      │     Points to heap
-│    ├─ len:  5            │      │
-│    └─ cap:  5            │      │
-│                          │      │
-│  v: Vec<i32>             │      │  ← Vec struct (24 bytes):
-│    ├─ ptr:  0x8100 ───┐  │      │     Points to heap
-│    ├─ len:  5         │  │      │
-│    └─ cap:  5         │  │      │
-│                       │  │      │
-│  arr: [i32; 5]        │  │      │  ← Native array (20 bytes):
-│    [50]               │  │      │     All data on stack!
-│    [40]               │  │      │     Elements at increasing
-│    [30]               │  │      │     addresses (50 highest,
-│    [20]               │  │      │     10 lowest)
-│    [10]               │  │      │
-│                       │  │      │
-└───────────────────────┼──┼──────┘  ← Stack Pointer (RSP) points here (low address)
-                        │  │
-                        │  └───────┐
-HEAP (grows upward):    │          │
-┌───────────────────────┼──────────┼─────────────┐
-│                       ↓          │             │
-│  0x8100: [1][2][3][4][5]         │             │
-│   v's data (6 bytes)             │             │
-│                                  ↓             │
-│                         0x8000: [w][o][r][l][d]│  ← v's data
-│               (20 bytes: 5 * 4-byte integers)  │
-│                                                │
-└────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph STACK["<b>STACK</b> (grows downward from high addresses)"]
+        direction TB
+        s_top["0x7FFF_FFFF_FFF0 (high address)"]
+        s_ret["[Return address]<br/>Where to return after main"]
+        s_saved["[Saved registers]"]
+        s_x["<b>x: i32 = 42</b><br/>Local variable (4 bytes)"]
+        s_y["<b>y: i32 = 100</b><br/>Local variable (4 bytes)"]
+        s_string["<b>s: String</b> (24 bytes)<br/>Points to heap"]
+        s_vec["<b>v: Vec&lt;i32&gt;</b> (24 bytes)<br/>Points to heap"]
+        s_arr["<b>arr: [i32; 5]</b> (20 bytes)<br/>All data on stack!<br/>[50] [40] [30] [20] [10]"]
+        s_sp["← Stack Pointer (RSP)<br/>(low address)"]
+
+        s_top --> s_ret --> s_saved --> s_x --> s_y --> s_string --> s_vec --> s_arr --> s_sp
+    end
+
+    subgraph HEAP["<b>HEAP</b> (grows upward)"]
+        direction TB
+        h_v["0x8100: [1][2][3][4][5]<br/>v's data (20 bytes: 5 × 4-byte integers)"]
+        h_s["0x8000: [w][o][r][l][d]<br/>s's data (5 bytes)"]
+    end
+
+    s_string -->|ptr: 0x8000| h_s
+    s_vec -->|ptr: 0x8100| h_v
 ```
 
 **Important observations:**
@@ -219,65 +178,46 @@ When we call `process_data(x, &s)`, here's what the CPU actually does (x86-64 ca
    - Allocates space for local variables
    - May spill register arguments to stack (compiler's choice)
 
-```bob
-CPU REGISTERS (not in memory!):
-┌────────────────────────────────────┐
-│  RBP:  0x7FFF_FFFF_FF00            │  Base pointer (main's frame base)
-│  RSP:  0x7FFF_FFFF_FE00            │  Stack pointer (current top)
-│  EDI:  42          ← param_num     │  Arguments passed via registers!
-│  RSI:  0x7FFF...   ← param_text    │  Points to s on stack
-└──────────┼─────────────────────────┘  These are NOT in stack memory
-           │
-STACK:     └ ─ ─ ─ ─ ─ ─ ─ ┐
-┌──────────────────────────┼─────────┐  ← main() pushed first (higher address)
-│                                    │    0x7FFF_FFFF_FFF0
-│    main()'s stack frame  │         │
-│                                    │
-│  [Return address to OS]  │         │
-│  [Saved main's RBP]                │  ← RBP points here (0x7FFF_FFFF_FF00)
-│                          │         │
-│  x: i32 = 42                       │  ← at [rbp-4]
-│  y: i32 = 100            │         │  ← at [rbp-8]
-│  [padding ~24 bytes]               │  ← Compiler adds padding for alignment
-│  s: String  ←─ ─ ─ ─ ─ ─ ┘         │  ← at [rbp-32] (aligned to 8-byte boundary)
-│    ├─ ptr:  0x8000  ───────┐       │
-│    ├─ len:  5              │       │
-│    └─ cap:  5              │       │
-│                            │       │
-│  v: Vec<i32>               │       │
-│    ├─ ptr:  0x8100  ──┐    │       │
-│    ├─ len:  5         │    │       │
-│    └─ cap:  5         │    │       │
-│                       │    │       │
-│  arr: [i32; 5]        │    │       │
-│    [50]               │    │       │
-│    [40]               │    │       │
-│    [30]               │    │       │
-│    [20]               │    │       │
-│    [10]               │    │       │
-│                       │    │       │
-│  doubled: i32 = ???   │    │       │  ← Space for return value (not set yet)
-│                       │    │       │
-├───────────────────────┼────┼───────┤
-│  [Return address to main]  │       │  ← process_data()'s stack frame
-│  [Saved RBP = 0x7FFF_FFFF_FF00]    │  ← "push rbp" saved it here
-│                       │    │       │  ← process_data's RBP points HERE
-│  result: i32 = 84     │    │       │  ← Local variable at [rbp-4]
-│                       │    │       │
-│  (param_num/param_text NOT here!)  │  ← Arguments are in REGISTERS, not stack!
-│                       │    │       │
-│  [allocated space]    │    │       │  ← "sub rsp, 16" allocated this
-│                       │    │       │
-└───────────────────────│────┼───────┘  ← RSP points here (0x7FFF_FFFF_FE00)
-                        │    │
-HEAP:                   │    │
-┌───────────────────────┼────┼─────────────────┐
-│                       │    ↓                 │
-│  0x8000: "world\0"    │  [w][o][r][l][d][\0] │
-│                       ↓                      │
-│              0x8100: [1][2][3][4][5]         │
-│                                              │
-└──────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    regs["<b>CPU REGISTERS</b> (not in memory!)<br/><br/>RBP: 0x7FFF_FFFF_FF00 — Base pointer<br/>RSP: 0x7FFF_FFFF_FE00 — Stack pointer<br/>EDI: 42 — param_num<br/>RSI: 0x7FFF... — param_text"]
+
+    subgraph STACK["<b>STACK</b>"]
+        direction TB
+        subgraph main_frame["<b>main()'s stack frame</b>"]
+            direction TB
+            m_ret["[Return address to OS]<br/>0x7FFF_FFFF_FFF0"]
+            m_rbp["[Saved main's RBP]<br/>RBP points here (0x7FFF_FFFF_FF00)"]
+            m_x["<b>x: i32 = 42</b> — at [rbp-4]"]
+            m_y["<b>y: i32 = 100</b> — at [rbp-8]"]
+            m_pad["[padding ~24 bytes]<br/>Compiler adds padding for alignment"]
+            m_s["<b>s: String</b> — at [rbp-32]<br/>ptr: 0x8000 | len: 5 | cap: 5"]
+            m_v["<b>v: Vec&lt;i32&gt;</b><br/>ptr: 0x8100 | len: 5 | cap: 5"]
+            m_arr["<b>arr: [i32; 5]</b><br/>[50] [40] [30] [20] [10]"]
+            m_doubled["<b>doubled: i32 = ???</b><br/>Space for return value (not set yet)"]
+        end
+
+        subgraph pd_frame["<b>process_data()'s stack frame</b>"]
+            direction TB
+            p_ret["[Return address to main]"]
+            p_rbp["[Saved RBP = 0x7FFF_FFFF_FF00]<br/>process_data's RBP points HERE"]
+            p_result["<b>result: i32 = 84</b><br/>Local variable at [rbp-4]"]
+            p_args["(param_num/param_text NOT here!)<br/>Arguments are in REGISTERS, not stack!"]
+            p_alloc["[allocated space]<br/>'sub rsp, 16' allocated this"]
+        end
+
+        main_frame --> pd_frame
+    end
+
+    subgraph HEAP["<b>HEAP</b>"]
+        direction TB
+        h_s["0x8000: 'world\\0'<br/>[w][o][r][l][d][\\0]"]
+        h_v["0x8100: [1][2][3][4][5]"]
+    end
+
+    regs -.->|RSI points to s| m_s
+    m_s -->|ptr: 0x8000| h_s
+    m_v -->|ptr: 0x8100| h_v
 ```
 
 **Key observations about arguments and returns:**
@@ -362,48 +302,30 @@ When `process_data()` returns, two things happen:
 1. **Return value is copied**: The value in `result` (84) is **copied** to `doubled` in main's frame (using CPU register or direct memory copy)
 2. **Stack frame is popped**: process_data's entire frame is destroyed
 
-```bob
-STACK:
-┌───────────────────────────────────┐
-│                                   │
-│    main()'s stack frame           │
-│                                   │
-│  [Return address to OS]           │
-│  [Saved registers]                │
-│                                   │
-│  x: i32 = 42                      │
-│  y: i32 = 100                     │
-│                                   │
-│  s: String                        │
-│    ├─ ptr:  0x8000  ──────┐       │
-│    ├─ len:  5             │       │
-│    └─ cap:  5             │       │
-│                           │       │
-│  v: Vec<i32>              │       │
-│    ├─ ptr:  0x8100  ──┐   │       │
-│    ├─ len:  5         │   │       │
-│    └─ cap:  5         │   │       │
-│                       │   │       │
-│  arr: [i32; 5]        │   │       │
-│    [50]               │   │       │
-│    [40]               │   │       │
-│    [30]               │   │       │
-│    [20]               │   │       │
-│    [10]               │   │       │
-│                       │   │       │
-│  doubled: i32 = 84    │   │       │  ← Return value COPIED here (4 bytes)
-│                       │   │       │
-└───────────────────────┼───┼───────┘
-                        │   │
-                        │   └────────────┐
-HEAP:                   │                │
-┌───────────────────────┼────────────────┼───┐
-│                       ↓                ↓   │
-│  0x8000: "world\0"    [w][o][r][l][d][\0]  │
-│                                            │
-│  0x8100: [1][2][3][4][5]                   │
-│                                            │
-└────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph STACK["<b>STACK</b>"]
+        direction TB
+        m_ret["[Return address to OS]"]
+        m_saved["[Saved registers]"]
+        m_x["<b>x: i32 = 42</b>"]
+        m_y["<b>y: i32 = 100</b>"]
+        m_s["<b>s: String</b><br/>ptr: 0x8000 | len: 5 | cap: 5"]
+        m_v["<b>v: Vec&lt;i32&gt;</b><br/>ptr: 0x8100 | len: 5 | cap: 5"]
+        m_arr["<b>arr: [i32; 5]</b><br/>[50] [40] [30] [20] [10]"]
+        m_doubled["<b>doubled: i32 = 84</b><br/>← Return value COPIED here (4 bytes)"]
+
+        m_ret --> m_saved --> m_x --> m_y --> m_s --> m_v --> m_arr --> m_doubled
+    end
+
+    subgraph HEAP["<b>HEAP</b>"]
+        direction TB
+        h_s["0x8000: 'world\\0'<br/>[w][o][r][l][d][\\0]"]
+        h_v["0x8100: [1][2][3][4][5]"]
+    end
+
+    m_s -->|ptr: 0x8000| h_s
+    m_v -->|ptr: 0x8100| h_v
 ```
 
 **Key observations about returns:**
@@ -523,19 +445,17 @@ v.push(2);                      // adds to heap, len=2, cap=4
 
 **Stack memory layout:**
 
-```bob
-Stack:
-┌────────────────────────────┐
-│ number: Number             │
-│   n: 42                    │  4 bytes
-├────────────────────────────┤
-│ v: Vec<i32>                │
-│   ptr:  0x1000  ─────┐     │  8 bytes (pointer)
-│   len:  2            │     │  8 bytes
-│   cap:  4            │     │  8 bytes
-└──────────────────────┼─────┘  Total: 24 bytes on stack
-                       │
-                       └──────> Heap at 0x1000: [1][2]  (8 bytes + capacity for 2 more)
+```mermaid
+flowchart LR
+    subgraph Stack["<b>Stack</b>"]
+        direction TB
+        num["<b>number: Number</b><br/>n: 42 — 4 bytes"]
+        vec["<b>v: Vec&lt;i32&gt;</b><br/>ptr: 0x1000 — 8 bytes<br/>len: 2 — 8 bytes<br/>cap: 4 — 8 bytes<br/>Total: 24 bytes on stack"]
+    end
+
+    heap["<b>Heap at 0x1000</b><br/>[1][2]<br/>(8 bytes + capacity for 2 more)"]
+
+    vec -->|ptr| heap
 ```
 
 We'll explore heap and allocation in more detail in the next section.
@@ -604,17 +524,15 @@ You can think a reference as a safe pointer guaranteed by the compiler.
 
 **What's in memory :**
 
-```bob
-Stack (User Space - lower canonical addresses start with 0x0000):
-                         ┌─────────────────────────────┐
- │ 0x0000_7FFF_FFFF_FF00 │  x: i32 = 42                │
- │                       │  [0x00][0x00][0x00][0x2A]   │
-Low to high              ├─────────────────────────────┤
- │                       │                             │
- │ 0x0000_7FFF_FFFF_FF04 │  x_ref: &i32                │
- │                       │  [0x00][0x00][0x7F][0xFF]   │ Contains address: 0x0000_7FFF_FFFF_FF00
- │                       │  [0xFF][0xFF][0xFF][0x00]   │  (points to x)
- ↓                       └─────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Stack["<b>Stack</b> (User Space)"]
+        direction TB
+        x["<b>x: i32 = 42</b><br/>Address: 0x0000_7FFF_FFFF_FF00<br/>[0x00][0x00][0x00][0x2A]"]
+        xref["<b>x_ref: &amp;i32</b><br/>Address: 0x0000_7FFF_FFFF_FF04<br/>Contains: 0x0000_7FFF_FFFF_FF00"]
+    end
+
+    xref -->|points to x| x
 ```
 
 **Key points about references:**
@@ -635,16 +553,18 @@ let y_mut_ref: &mut i32 = &mut y;
 // y is now 200
 ```
 
-```bob
-Stack:
-┌─────────────────────────────┐
-│  y: i32 = 100               │  0x0000_7FFF_FFFF_FF10 (initially 100, then 200)
-├─────────────────────────────┤
-│  y_mut_ref: &mut i32        │  0x0000_7FFF_FFFF_FF14 (8 bytes)
-│  [pointer to y]  ────────┐  │  Contains: 0x0000_7FFF_FFFF_FF10
-└──────────────────────────┼──┘
-                           │
-    *y_mut_ref = 200  ─────┘  Writes through the pointer
+```mermaid
+flowchart TB
+    subgraph Stack["<b>Stack</b>"]
+        direction TB
+        y["<b>y: i32 = 100</b><br/>0x0000_7FFF_FFFF_FF10<br/>(initially 100, then 200)"]
+        yref["<b>y_mut_ref: &amp;mut i32</b><br/>0x0000_7FFF_FFFF_FF14 (8 bytes)<br/>Contains: 0x0000_7FFF_FFFF_FF10"]
+    end
+
+    write["*y_mut_ref = 200<br/>Writes through the pointer"]
+
+    yref -->|pointer to y| y
+    write -->|writes| y
 ```
 
 **References vs Raw Pointers:**
@@ -816,18 +736,23 @@ Unlike `Vec`, raw pointers don't do bounds checking! `Vec` would panic on `vec[3
 
 After \*ptr.add(2) = 3, the heap looks like this:
 
-```bob
-Stack (0x7FFF_FFFF_FF00)              Heap (0x5555_8000_0000)
-                                   (12 bytes total: 3 × 4-byte i32s)
-    ┌─────────────────────┐         ┌─────┐
-ptr │  0x5555_8000_0000  ─────────> │  1  │
-    └─────────────────────┘         ┌─────┐
-                                 +4 │  2  │
-                                    ┌─────┐
-                                 +8 │  3  │
-                                    ┌─────┐
-                                +12 │  4  │ *ptr.add(3) = 4 changed this, which is not owned by us!
-                                    └─────┘
+```mermaid
+flowchart LR
+    subgraph Stack["<b>Stack</b> (0x7FFF_FFFF_FF00)"]
+        ptr["<b>ptr</b><br/>0x5555_8000_0000"]
+    end
+
+    subgraph Heap["<b>Heap</b> (0x5555_8000_0000)<br/>12 bytes total: 3 × 4-byte i32s"]
+        direction TB
+        h0["+0: 1"]
+        h1["+4: 2"]
+        h2["+8: 3"]
+        h3["+12: 4<br/>*ptr.add(3) = 4 changed this,<br/>which is not owned by us!"]
+
+        h0 --> h1 --> h2 --> h3
+    end
+
+    ptr -->|points to| h0
 ```
 
 **Key points:**
@@ -1108,24 +1033,26 @@ let v = Vec::new();
 
 **Wrong mental model:**
 
-```bob
-Stack:
-┌────────────────────┐
-│ v: Vec<i32>        │
-│   [data goes here] │  ← NO! Data doesn't live here
-└────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Stack["<b>Stack</b>"]
+        v_wrong["<b>v: Vec&lt;i32&gt;</b><br/>[data goes here]<br/>← NO! Data doesn't live here"]
+    end
 ```
 
 **Correct mental model:**
 
-```bob
-Stack:                    Heap:
-┌──────────────┐         ┌──────────┐
-│ v: Vec<i32>  │         │          │
-│   ptr ──────────────>  │ (data)   │  ← Data lives here!
-│   len: 0     │         │          │
-│   cap: 0     │         └──────────┘
-└──────────────┘
+```mermaid
+flowchart LR
+    subgraph Stack["<b>Stack</b>"]
+        v["<b>v: Vec&lt;i32&gt;</b><br/>ptr | len: 0 | cap: 0"]
+    end
+
+    subgraph Heap["<b>Heap</b>"]
+        data["(data)<br/>← Data lives here!"]
+    end
+
+    v -->|ptr| data
 ```
 
 ### Misconception #2: "String is just text"

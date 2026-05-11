@@ -482,7 +482,9 @@ h1#libr0 {
    MEMORY DIAGRAMS
    ======================================== */
 
-#content main div:has(svg.svgbob) {
+/* Mermaid diagrams */
+#content main div:has(.mermaid),
+#content main pre:has(code.language-mermaid) {
     background: #f5f7fa;
     border: 1px solid var(--border);
     border-left: 3px solid var(--rustdoc-blue);
@@ -493,8 +495,9 @@ h1#libr0 {
     overflow-x: auto;
 }
 
-#content main div:has(svg.svgbob)::before {
-    content: 'Memory Layout';
+#content main div:has(.mermaid)::before,
+#content main pre:has(code.language-mermaid)::before {
+    content: 'Diagram';
     position: absolute;
     top: 8px;
     right: 10px;
@@ -507,34 +510,32 @@ h1#libr0 {
     padding: 2px 10px;
     border-radius: 3px;
     font-family: -apple-system, sans-serif;
+    z-index: 1;
 }
 
-#content main div:has(svg.svgbob):hover {
+#content main div:has(.mermaid):hover,
+#content main pre:has(code.language-mermaid):hover {
     border-left-color: var(--rustdoc-blue-dark);
 }
 
-#content main div:has(svg.svgbob) svg.svgbob {
+#content main div.mermaid,
+#content main pre.mermaid {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+#content main .mermaid svg {
     width: 100%;
     max-width: none;
 }
 
-/* Memory region colors — very subtle */
-.memory-region-stack rect { fill: rgba(77, 118, 174, 0.12) !important; }
-.memory-region-heap rect { fill: rgba(56, 158, 13, 0.12) !important; }
-.memory-region-bss rect { fill: rgba(212, 167, 44, 0.12) !important; }
-.memory-region-data rect { fill: rgba(200, 80, 30, 0.12) !important; }
-.memory-region-text rect { fill: rgba(100, 100, 100, 0.10) !important; }
-.memory-region-registers rect { fill: rgba(120, 60, 180, 0.12) !important; }
-
-/* Mermaid diagrams */
-#content main div:has(.mermaid),
-#content main pre:has(code.language-mermaid) {
-    background: #fafafa;
-    border-left: 3px solid var(--rustdoc-blue);
-    border-radius: 2px;
-    padding: 16px;
-    margin: 1.25em 0;
-    border: 1px solid var(--border);
+/* Mermaid subgraph styling for STACK/HEAP regions */
+#content main .mermaid .node.cluster rect,
+#content main .mermaid svg .cluster rect {
+    rx: 4;
+    ry: 4;
 }
 
 /* ========================================
@@ -971,60 +972,7 @@ a img[src*="badge"] {
     color: #bac2de;
 }
 
-/* Dark: Diagrams */
-.navy #content main div:has(svg.svgbob),
-.coal #content main div:has(svg.svgbob),
-.ayu #content main div:has(svg.svgbob) {
-    background: rgba(77, 118, 174, 0.06);
-    border-color: rgba(255, 255, 255, 0.08);
-    border-left-color: var(--rustdoc-blue);
-}
-
-.navy #content main div:has(svg.svgbob)::before,
-.coal #content main div:has(svg.svgbob)::before,
-.ayu #content main div:has(svg.svgbob)::before {
-    background: var(--rustdoc-blue);
-    color: #fff;
-}
-
-.navy #content main div:has(svg.svgbob) svg text,
-.coal #content main div:has(svg.svgbob) svg text,
-.ayu #content main div:has(svg.svgbob) svg text {
-    fill: var(--fg) !important;
-}
-
-.navy #content main div:has(svg.svgbob) svg path,
-.coal #content main div:has(svg.svgbob) svg path,
-.ayu #content main div:has(svg.svgbob) svg path {
-    stroke: #666 !important;
-}
-
-/* Dark: Memory region colors */
-.navy .memory-region-stack rect,
-.coal .memory-region-stack rect,
-.ayu .memory-region-stack rect { fill: rgba(77, 118, 174, 0.18) !important; }
-
-.navy .memory-region-heap rect,
-.coal .memory-region-heap rect,
-.ayu .memory-region-heap rect { fill: rgba(56, 158, 13, 0.18) !important; }
-
-.navy .memory-region-bss rect,
-.coal .memory-region-bss rect,
-.ayu .memory-region-bss rect { fill: rgba(212, 167, 44, 0.18) !important; }
-
-.navy .memory-region-data rect,
-.coal .memory-region-data rect,
-.ayu .memory-region-data rect { fill: rgba(200, 80, 30, 0.18) !important; }
-
-.navy .memory-region-text rect,
-.coal .memory-region-text rect,
-.ayu .memory-region-text rect { fill: rgba(100, 100, 100, 0.18) !important; }
-
-.navy .memory-region-registers rect,
-.coal .memory-region-registers rect,
-.ayu .memory-region-registers rect { fill: rgba(120, 60, 180, 0.18) !important; }
-
-/* Dark: Mermaid */
+/* Dark: Mermaid diagrams */
 .navy #content main div:has(.mermaid),
 .coal #content main div:has(.mermaid),
 .ayu #content main div:has(.mermaid),
@@ -1034,6 +982,16 @@ a img[src*="badge"] {
     background: rgba(0, 0, 0, 0.2);
     border-color: rgba(255, 255, 255, 0.08);
     border-left-color: var(--rustdoc-blue);
+}
+
+.navy #content main div:has(.mermaid)::before,
+.coal #content main div:has(.mermaid)::before,
+.ayu #content main div:has(.mermaid)::before,
+.navy #content main pre:has(code.language-mermaid)::before,
+.coal #content main pre:has(code.language-mermaid)::before,
+.ayu #content main pre:has(code.language-mermaid)::before {
+    background: var(--rustdoc-blue);
+    color: #fff;
 }
 
 /* Dark: HR */

@@ -306,24 +306,22 @@ println!("{}", r1);  // DANGER: r1 still pointing to the value inside the cell!
 
 **Step 1: `cell.get_ref()` returns a reference**
 
-```bob
-+---------------+
-| Cell<i32>     |
-| +-----------+ |
-| | value: 5  | | <----- r1: &i32 points here
-| +-----------+ |        Remember, &i32 is immutable!
-+---------------+
+```mermaid
+flowchart LR
+    subgraph CELL1["Cell&lt;i32&gt;"]
+        V1["<b>value: 5</b>"]
+    end
+    R1["r1: &amp;i32"] --> V1
 ```
 
 **Step 2: `cell.set(10)` changes the value**
 
-```bob
-+---------------+
-| Cell<i32>     |
-| +-----------+ |
-| | value: 10 | | <----- r1: &i32 STILL points here!
-| +-----------+ |        But r1 is supposed to be immutable!
-+---------------+        The data it points to changed!
+```mermaid
+flowchart LR
+    subgraph CELL2["Cell&lt;i32&gt;"]
+        V2["<b>value: 10</b>"]
+    end
+    R2["r1: &amp;i32<br/>STILL points here!<br/>But r1 is supposed to be immutable!<br/>The data it points to changed!"] --> V2
 ```
 
 **BROKEN:** r1 points into Cell's memory, and that memory can be mutated.
@@ -346,35 +344,31 @@ println!("{}", n);  // Still reads 5, because n is a copy, not a reference!
 
 **Initial state:**
 
-```bob
-+--------------+
-| Cell<i32>    |
-| +----------+ |
-| | value: 5 | |  <- Value lives inside Cell
-| +----------+ |
-+--------------+
+```mermaid
+flowchart LR
+    subgraph CELL3["Cell&lt;i32&gt;"]
+        V3["<b>value: 5</b><br/>&amp;larr; Value lives inside Cell"]
+    end
 ```
 
 **`cell.get()` - Returns a COPY:**
 
-```bob
-+--------------+
-| Cell<i32>    |
-| +----------+ |    copy    +----+
-| | value: 5 | | ---------> | 5  |  <- Copy created in new memory location
-| +----------+ |            +----+    no reference to Cell's internal value!
-+--------------+
+```mermaid
+flowchart LR
+    subgraph CELL4["Cell&lt;i32&gt;"]
+        V4["<b>value: 5</b>"]
+    end
+    V4 -- copy --> C4["<b>5</b><br/>Copy created in new memory location<br/>No reference to Cell's internal value!"]
 ```
 
 **`cell.set(10)` - REPLACES the value:**
 
-```bob
-+---------------+
-| Cell<i32>     |
-| +-----------+ |            +----+
-| | value: 10 | |            | 5  |  <- Old value still 5
-| +-----------+ |            +----+
-+---------------+
+```mermaid
+flowchart LR
+    subgraph CELL5["Cell&lt;i32&gt;"]
+        V5["<b>value: 10</b>"]
+    end
+    O5["<b>5</b><br/>Old value still 5"]
 ```
 
 **Key insight**: You never get `&i32` or `&mut i32` pointing to the value inside Cell's box. Only copies come out. The inner value never escapes as a reference.
@@ -505,12 +499,14 @@ let r2 = cell.get_mut();  // ❌ Error: cannot borrow `cell` as mutable more tha
 
 **Why this defeats Cell's purpose:**
 
-```bob
-Cell's point:        &Cell<T>  --set()-->  mutate through &self
-                                            (interior mutability)
-
-get_mut:        &mut Cell<T>  --get_mut()-->  &mut T
-                                               (normal mutability)
+```mermaid
+flowchart LR
+    subgraph CELL_PURPOSE["Cell's point: Interior Mutability"]
+        A1["&amp;Cell&lt;T&gt;"] -- set --> B1["mutate through &amp;self<br/>(interior mutability)"]
+    end
+    subgraph GETMUT["get_mut: Normal Mutability"]
+        A2["&amp;mut Cell&lt;T&gt;"] -- get_mut --> B2["&amp;mut T<br/>(normal mutability)"]
+    end
 ```
 
 If you have `&mut Cell`, you could've just used `T` directly:

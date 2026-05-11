@@ -65,23 +65,19 @@ println!("Counter: {}", counter.borrow()); // 2
 
 `Rc<RefCell<T>>` has two levels of tracking in a single allocation:
 
-```bob
-     STACK                |           HEAP
-                          |
-+-------------+           |  +-----------------------+
-|"counter: Rc"|           |  | RcInner               |
-|"ptr:" *-----+------+----+->+-----------------------+
-+-------------+      |    |  | "strong_count: 3"  <--+--- Rc tracks # of owners
-                     |    |  | "weak_count: 0"       |
-+--------------+     |    |  |         +-------------+
-|"counter1: Rc"|     |    |  | "value:"|RefCell<i32> |
-|"ptr:"*-------+-----+    |  |         | "borrow:"0  |<-- RefCell tracks borrows   
-+--------------+     |    |  |         |  "value:"2  |   "(after two increments)"
-                     |    |  |         +-------------+ 
-+--------------+     |    |  +-----------------------+
-|"counter2: Rc |     |    |
-|"ptr:"*-------+-----+    |
-+--------------+          |
+```mermaid
+flowchart LR
+  subgraph STACK
+    counter["<b>counter: Rc</b><br/>ptr: *"]
+    counter1["<b>counter1: Rc</b><br/>ptr: *"]
+    counter2["<b>counter2: Rc</b><br/>ptr: *"]
+  end
+  subgraph HEAP
+    rcinner["<b>RcInner</b><br/>strong_count: 3<br/>weak_count: 0<br/>value:<br/>&nbsp;&nbsp;RefCell&lt;i32&gt;<br/>&nbsp;&nbsp;borrow: 0<br/>&nbsp;&nbsp;value: 2"]
+  end
+  counter -->|ptr| rcinner
+  counter1 -->|ptr| rcinner
+  counter2 -->|ptr| rcinner
 ```
 
 **Two kinds of tracking:**
@@ -176,27 +172,20 @@ let node_b = Rc::new(Node {
 
 **Visual representation of the cycle:**
 
-```bob
-    STACK         |              HEAP
-                  |
-+------------+    |     +--------------------+
-|"node_a: Rc"|----|---->| RcInner<Node>      |<--.
-+------------+    |     +--------------------+   |
-                  |     | "strong_count:"2   |   |
-                  |     | "value:"1          |   |
-                  |     | "next: Rc" *       |   |
-                  |     +------------|-------+   |
-                  |               .--'           |
-                  |               |              |
-                  |               v              |
-+------------+    |     +--------------------+   |
-|"node_b: Rc"|----|---->| RcInner<Node>      |   |
-+------------+    |     +--------------------+   |
-                  |     | "strong_count:"2   |   |
-                  |     | "value:"2          |   |
-                  |     | "next: Rc" *-------+---'
-                  |     +--------------------+
-                  |      
+```mermaid
+flowchart LR
+  subgraph STACK
+    nodeA["<b>node_a: Rc</b>"]
+    nodeB["<b>node_b: Rc</b>"]
+  end
+  subgraph HEAP
+    innerA["<b>RcInner&lt;Node&gt;</b><br/>strong_count: 2<br/>value: 1<br/>next: Rc *"]
+    innerB["<b>RcInner&lt;Node&gt;</b><br/>strong_count: 2<br/>value: 2<br/>next: Rc *"]
+  end
+  nodeA -->|ptr| innerA
+  nodeB -->|ptr| innerB
+  innerA -->|"next"| innerB
+  innerB -->|"next"| innerA
 ```
 
 **When the stack variables drop:**
@@ -226,11 +215,16 @@ This is a **memory leak** - the memory is allocated but never freed. Unlike othe
 
 Remember our cycle problem? Both nodes point to each other:
 
-```bob
- "node_a" ---> "inner node_a" ----> "inner node_b"  <-- "node_b"
-               "(count: 2)"         "(count: 2)"
-                    ^                     │
-                    └─────────────────────┘
+```mermaid
+flowchart LR
+    node_a["<b>node_a</b>"]
+    node_b["<b>node_b</b>"]
+    inner_a["<b>inner node_a</b><br/>count: 2"]
+    inner_b["<b>inner node_b</b><br/>count: 2"]
+    node_a -->|Rc| inner_a
+    node_b -->|Rc| inner_b
+    inner_a -->|"next (Rc)"| inner_b
+    inner_b -->|"prev (Rc)"| inner_a
 ```
 
 When we drop both variables, the counts go from 2 to 1, but never reach 0. **The nodes keep each other alive forever.**
@@ -408,27 +402,18 @@ if let Some(parent) = child1.parent.borrow().upgrade() {
 
 **Visual representation:**
 
-```bob
-+-------------+
-|    root     |<~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.
-|  "value:"1  |                               :
-+------+------+                               :
-       |                                      :
-       | Strong refs, parent owns children    :
-       |                                      :
-       +----------+--------------+            :
-       |          |              |            :
-       v          v              v            :
-+-----------+ +-----------+ +-----------+     :
-|  child1   | |  child2   | |  child3   |     :
-| "value: 2"| | "value: 3"| | "value: 4"|     :
-+------:----+ +-----:-----+ +-----:-----+     :
-       :            :             :           :
-       '~~~~~~~~~~~~+~~~~~~~~~~~~~'           :
-                    :                         :
-   Weak, children do:not own parent           :
-                    :                         :
-                    '~~~~~~~~~~~~~~~~~~~~~~~~~'
+```mermaid
+flowchart TB
+    root["<b>root</b><br/>value: 1"]
+    child1["<b>child1</b><br/>value: 2"]
+    child2["<b>child2</b><br/>value: 3"]
+    child3["<b>child3</b><br/>value: 4"]
+    root -->|"Rc (strong)"| child1
+    root -->|"Rc (strong)"| child2
+    root -->|"Rc (strong)"| child3
+    child1 -.->|"Weak (non-owning)"| root
+    child2 -.->|"Weak (non-owning)"| root
+    child3 -.->|"Weak (non-owning)"| root
 ```
 
 **Why this works:**
