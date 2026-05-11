@@ -17,7 +17,21 @@
     }
 
     const theme = lastThemeWasLight ? 'default' : 'dark';
-    mermaid.initialize({ startOnLoad: true, theme });
+    mermaid.initialize({
+        startOnLoad: true,
+        theme,
+        flowchart: {
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis',
+            nodeSpacing: 30,
+            rankSpacing: 40,
+        },
+        themeVariables: {
+            fontSize: '14px',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif',
+        }
+    });
 
     // Simplest way to make mermaid re-render the diagrams in the new theme is via refreshing the page
 

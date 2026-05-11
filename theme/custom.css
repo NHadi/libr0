@@ -527,8 +527,8 @@ h1#libr0 {
 }
 
 #content main .mermaid svg {
-    width: 100%;
-    max-width: none;
+    max-width: 100%;
+    height: auto;
 }
 
 /* Mermaid subgraph styling for STACK/HEAP regions */
@@ -753,6 +753,7 @@ details[style] > *:not(summary) {
 #sidebar a {
     transition: background 0.1s;
     border-radius: 2px;
+    font-size: 0.9rem;
 }
 
 #sidebar a:hover {
@@ -767,7 +768,7 @@ details[style] > *:not(summary) {
 }
 
 #sidebar .part-title {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--rustdoc-blue);
