@@ -12,7 +12,7 @@ default-theme = "light"
 preferred-dark-theme = "navy"
 git-repository-url = "https://github.com/arinal/libr0"
 additional-js = ["mermaid.min.js", "mermaid-init.js", "theme/diagram-enhance.js"]
-additional-css = ["theme/custom.css"]
+# additional-css = ["theme/custom.css"]
 
 [output.html.search]
 enable = true
