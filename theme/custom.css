@@ -442,11 +442,9 @@ body::after {
 /* Mermaid diagrams */
 #content main div:has(.mermaid),
 #content main pre:has(code.language-mermaid) {
-    background: #0d1117;
+    background: #f0f9ff;
     border-left: 4px solid #0ea5e9;
-    border: 1px solid #30363d;
-    border-left: 4px solid #0ea5e9;
-    border-radius: 8px;
+    border-radius: 4px;
     padding: 16px;
     margin: 1.5em 0;
 }
@@ -767,10 +765,10 @@ th .icon-cross {
 .mem-diagram-enhanced {
     margin: 1.5em 0;
     padding: 0;
-    border-radius: 8px;
+    border-radius: 4px;
     overflow: hidden;
-    border: 1px solid rgba(206, 66, 43, 0.15);
-    background: #0d1117;
+    border-left: 4px solid var(--rust-orange);
+    background: #fff8f0;
     font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', monospace;
 }
 
@@ -779,7 +777,7 @@ th .icon-cross {
 }
 
 .mem-diagram-section + .mem-diagram-section {
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .mem-diagram-title {
@@ -787,10 +785,10 @@ th .icon-cross {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #a0aec0;
+    color: #6b7280;
     margin-bottom: 16px;
     padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .mem-diagram-layout {
@@ -817,15 +815,15 @@ th .icon-cross {
 }
 
 .mem-region-stack .mem-region-header {
-    color: #9ae6b4;
-    background: rgba(72, 187, 120, 0.1);
-    border: 1px solid rgba(72, 187, 120, 0.2);
+    color: #15803d;
+    background: rgba(22, 163, 74, 0.08);
+    border: 1px solid rgba(22, 163, 74, 0.2);
 }
 
 .mem-region-heap .mem-region-header {
-    color: #90cdf4;
-    background: rgba(66, 153, 225, 0.1);
-    border: 1px solid rgba(66, 153, 225, 0.2);
+    color: #1d4ed8;
+    background: rgba(37, 99, 235, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
 .mem-region-fields {
@@ -903,62 +901,38 @@ div:has(+ .mem-diagram-enhanced) {
     display: block;
 }
 
-/* All svgbob containers get dark professional styling */
+/* All svgbob containers - original light theme from libr0Pure */
 #content main div:has(> svg.svgbob),
 #content main .svgbob-container,
 #content main div.svgbob {
-    background: #0d1117 !important;
+    background: #fff8f0;
     border-left: 4px solid var(--rust-orange);
-    border: 1px solid #30363d;
-    border-left: 4px solid var(--rust-orange);
-    border-radius: 8px;
-    padding: 20px 24px;
+    border-radius: 4px;
+    padding: 16px 20px;
     margin: 1.5em 0;
     overflow-x: auto;
     position: relative;
 }
 
-/* Style svgbob text elements - base color, JS will override with smart colors */
+/* Style svgbob text elements */
 #content main svg.svgbob text {
     font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace !important;
     font-size: 12px !important;
-    fill: #e6edf3 !important;
-}
-
-/* Structural SVG elements */
-#content main svg.svgbob line {
-    stroke: #30363d !important;
-}
-
-#content main svg.svgbob path {
-    stroke: #8b949e !important;
-}
-
-#content main svg.svgbob rect {
-    stroke: #30363d !important;
-}
-
-#content main svg.svgbob polygon {
-    fill: #8b949e !important;
-    stroke: #8b949e !important;
-}
-
-#content main svg.svgbob circle {
-    stroke: #8b949e !important;
 }
 
 /* Dark theme for bob code blocks that haven't been processed by svgbob */
 #content main pre:has(code.language-bob) {
-    background: #0d1117 !important;
+    background: #fff8f0 !important;
     border-left: 4px solid var(--rust-orange);
-    border-radius: 8px;
-    padding: 20px;
+    border-radius: 4px;
+    padding: 16px 20px;
     overflow-x: auto;
 }
 
 #content main pre:has(code.language-bob) code {
-    color: #e2e8f0 !important;
+    color: #1a1a1a !important;
     background: none !important;
+    font-family: 'JetBrains Mono', 'SF Mono', monospace;
     font-size: 0.82rem;
     line-height: 1.4;
 }
@@ -974,9 +948,9 @@ div:has(+ .mem-diagram-enhanced) {
     gap: 12px;
     margin: 1.5em 0;
     padding: 20px 24px;
-    background: #0d1117;
-    border: 1px solid rgba(206, 66, 43, 0.15);
-    border-radius: 8px;
+    background: #fff8f0;
+    border-left: 4px solid var(--rust-orange);
+    border-radius: 4px;
     font-family: 'JetBrains Mono', 'SF Mono', monospace;
 }
 
@@ -991,7 +965,7 @@ div:has(+ .mem-diagram-enhanced) {
     min-width: 120px;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #e2e8f0;
+    color: #1a1a1a;
 }
 
 .mem-layout-blocks {
@@ -1010,30 +984,30 @@ div:has(+ .mem-diagram-enhanced) {
     white-space: nowrap;
 }
 
-.mem-layout-block.ptr { background: rgba(66,153,225,0.15); border-color: rgba(66,153,225,0.4); color: #90cdf4; }
-.mem-layout-block.len { background: rgba(72,187,120,0.15); border-color: rgba(72,187,120,0.4); color: #9ae6b4; }
-.mem-layout-block.cap { background: rgba(236,201,75,0.12); border-color: rgba(236,201,75,0.35); color: #fefcbf; }
-.mem-layout-block.val { background: rgba(206,66,43,0.12); border-color: rgba(206,66,43,0.35); color: #f6ad9a; }
-.mem-layout-block.tag { background: rgba(159,122,234,0.15); border-color: rgba(159,122,234,0.35); color: #c4b5fd; }
-.mem-layout-block.data { background: rgba(236,201,75,0.1); border-color: rgba(236,201,75,0.3); color: #fefcbf; }
-.mem-layout-block.freed { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); color: #4a5568; border-style: dashed; text-decoration: line-through; }
+.mem-layout-block.ptr { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.3); color: #1d4ed8; }
+.mem-layout-block.len { background: rgba(22,163,74,0.08); border-color: rgba(22,163,74,0.3); color: #15803d; }
+.mem-layout-block.cap { background: rgba(161,98,7,0.08); border-color: rgba(161,98,7,0.25); color: #92400e; }
+.mem-layout-block.val { background: rgba(206,66,43,0.08); border-color: rgba(206,66,43,0.25); color: #b91c1c; }
+.mem-layout-block.tag { background: rgba(124,58,237,0.08); border-color: rgba(124,58,237,0.25); color: #6d28d9; }
+.mem-layout-block.data { background: rgba(161,98,7,0.06); border-color: rgba(161,98,7,0.2); color: #92400e; }
+.mem-layout-block.freed { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.12); color: #9ca3af; border-style: dashed; text-decoration: line-through; }
 
 .mem-layout-arrow {
-    color: #718096;
+    color: #6b7280;
     font-size: 1.1rem;
     padding: 0 4px;
 }
 
 .mem-layout-heap-marker {
     font-size: 0.6rem;
-    color: rgba(66, 153, 225, 0.6);
+    color: rgba(37, 99, 235, 0.6);
     font-style: italic;
     margin-left: 4px;
 }
 
 .mem-layout-note {
     font-size: 0.7rem;
-    color: #718096;
+    color: #6b7280;
     margin-top: 4px;
     font-style: italic;
 }

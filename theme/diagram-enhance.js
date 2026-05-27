@@ -12,37 +12,34 @@
     'use strict';
 
     // ========================================
-    // COLOR PALETTE (cheats.rs inspired)
+    // COLOR PALETTE (light theme - matching libr0Pure original)
     // ========================================
     var PALETTE = {
         // Background
-        bg: '#0d1117',
-        bgCard: '#161b22',
-        bgHover: '#1c2128',
+        bg: '#fff8f0',
+        bgCard: '#ffffff',
 
         // Text
-        textPrimary: '#e6edf3',
-        textSecondary: '#8b949e',
-        textMuted: '#484f58',
+        textPrimary: '#1a1a1a',
+        textSecondary: '#6b7280',
+        textMuted: '#9ca3af',
 
-        // Semantic colors for memory fields
-        ptr: '#58a6ff',       // blue - pointers
-        len: '#7ee787',       // green - lengths
-        cap: '#d2a8ff',       // purple - capacity
-        value: '#ffa657',     // orange - values/data
-        tag: '#d2a8ff',       // purple - discriminants
-        strong: '#7ee787',    // green - strong count
-        weak: '#8b949e',      // gray - weak count
-        borrow: '#d2a8ff',    // purple - borrow count
-        data: '#ffa657',      // orange - raw data bytes
-        freed: '#484f58',     // dark gray - freed memory
-        type: '#ff7b72',      // red - type names
-        label: '#79c0ff',     // light blue - labels
-        arrow: '#8b949e',     // gray - arrows/lines
-        border: '#30363d',    // border color
-        borderAccent: '#f78166', // rust orange border
-        heap: '#1f6feb33',    // blue tint for heap regions
-        stack: '#23863633',   // green tint for stack regions
+        // Semantic colors for memory fields (light theme)
+        ptr: '#1d4ed8',       // blue - pointers
+        len: '#15803d',       // green - lengths
+        cap: '#92400e',       // amber - capacity
+        value: '#b91c1c',     // red - values/data
+        tag: '#6d28d9',       // purple - discriminants
+        strong: '#15803d',    // green - strong count
+        weak: '#6b7280',      // gray - weak count
+        borrow: '#6d28d9',    // purple - borrow count
+        data: '#92400e',      // amber - raw data bytes
+        freed: '#9ca3af',     // light gray - freed memory
+        type: '#CE422B',      // rust orange - type names
+        label: '#1d4ed8',     // blue - labels
+        arrow: '#6b7280',     // gray - arrows/lines
+        border: '#e5e7eb',    // border color
+        borderAccent: '#CE422B', // rust orange border
     };
 
     // ========================================
@@ -90,12 +87,11 @@
     }
 
     function styleSvgContainer(container, svg) {
-        // Style the container
+        // Style the container (light theme matching original)
         container.style.background = PALETTE.bg;
-        container.style.borderRadius = '8px';
-        container.style.border = '1px solid ' + PALETTE.border;
+        container.style.borderRadius = '4px';
         container.style.borderLeft = '4px solid ' + PALETTE.borderAccent;
-        container.style.padding = '20px 24px';
+        container.style.padding = '16px 20px';
         container.style.margin = '1.5em 0';
         container.style.overflowX = 'auto';
         container.style.position = 'relative';
@@ -104,7 +100,7 @@
         svg.style.maxWidth = '100%';
         svg.style.height = 'auto';
 
-        // Style all text elements
+        // Style all text elements with smart coloring
         var texts = svg.querySelectorAll('text');
         texts.forEach(function (text) {
             text.style.fontFamily = "'JetBrains Mono', 'SF Mono', 'Fira Code', monospace";
@@ -116,23 +112,23 @@
             text.style.fill = color;
         });
 
-        // Style lines and paths (structural elements)
+        // Style lines (structural elements) - subtle gray
         var lines = svg.querySelectorAll('line');
         lines.forEach(function (line) {
-            line.setAttribute('stroke', PALETTE.border);
-            line.style.stroke = PALETTE.border;
+            line.setAttribute('stroke', '#d1d5db');
+            line.style.stroke = '#d1d5db';
         });
 
         var paths = svg.querySelectorAll('path');
         paths.forEach(function (path) {
             var stroke = path.getAttribute('stroke');
             if (stroke && stroke !== 'none') {
-                path.setAttribute('stroke', PALETTE.arrow);
-                path.style.stroke = PALETTE.arrow;
+                path.setAttribute('stroke', '#9ca3af');
+                path.style.stroke = '#9ca3af';
             }
             var fill = path.getAttribute('fill');
             if (fill && fill !== 'none' && fill !== 'transparent') {
-                path.setAttribute('fill', PALETTE.arrow);
+                path.setAttribute('fill', '#9ca3af');
             }
         });
 
@@ -141,19 +137,17 @@
         rects.forEach(function (rect) {
             var stroke = rect.getAttribute('stroke');
             if (stroke && stroke !== 'none') {
-                rect.setAttribute('stroke', PALETTE.border);
-                rect.style.stroke = PALETTE.border;
+                rect.setAttribute('stroke', '#d1d5db');
+                rect.style.stroke = '#d1d5db';
             }
             var fill = rect.getAttribute('fill');
             if (fill && fill !== 'none' && fill !== 'transparent') {
-                // Check if it's a background rect or a content rect
                 var width = parseFloat(rect.getAttribute('width') || 0);
                 var height = parseFloat(rect.getAttribute('height') || 0);
                 if (width > 500 && height > 200) {
-                    // Large background rect
                     rect.setAttribute('fill', 'transparent');
                 } else {
-                    rect.setAttribute('fill', PALETTE.bgCard);
+                    rect.setAttribute('fill', '#ffffff');
                 }
             }
         });
@@ -161,8 +155,8 @@
         // Style polygons (arrows)
         var polygons = svg.querySelectorAll('polygon');
         polygons.forEach(function (poly) {
-            poly.setAttribute('fill', PALETTE.arrow);
-            poly.setAttribute('stroke', PALETTE.arrow);
+            poly.setAttribute('fill', '#9ca3af');
+            poly.setAttribute('stroke', '#9ca3af');
         });
 
         // Style circles
@@ -170,11 +164,11 @@
         circles.forEach(function (circle) {
             var fill = circle.getAttribute('fill');
             if (fill && fill !== 'none') {
-                circle.setAttribute('fill', PALETTE.arrow);
+                circle.setAttribute('fill', '#9ca3af');
             }
             var stroke = circle.getAttribute('stroke');
             if (stroke && stroke !== 'none') {
-                circle.setAttribute('stroke', PALETTE.border);
+                circle.setAttribute('stroke', '#d1d5db');
             }
         });
 
@@ -285,16 +279,15 @@
         });
 
         if (hasStack || hasHeap) {
-            // Add a subtle top bar with region indicators
             var bar = document.createElement('div');
-            bar.style.cssText = 'display:flex;gap:12px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid ' + PALETTE.border + ';';
+            bar.style.cssText = 'display:flex;gap:12px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e5e7eb;';
 
             if (hasStack) {
-                var stackBadge = createBadge('STACK', PALETTE.strong, '#23863622');
+                var stackBadge = createBadge('STACK', '#15803d', 'rgba(22,163,74,0.08)');
                 bar.appendChild(stackBadge);
             }
             if (hasHeap) {
-                var heapBadge = createBadge('HEAP', PALETTE.ptr, '#1f6feb22');
+                var heapBadge = createBadge('HEAP', '#1d4ed8', 'rgba(37,99,235,0.08)');
                 bar.appendChild(heapBadge);
             }
 
@@ -305,7 +298,7 @@
     function createBadge(text, color, bg) {
         var badge = document.createElement('span');
         badge.textContent = text;
-        badge.style.cssText = 'font-family:"JetBrains Mono",monospace;font-size:0.6rem;font-weight:700;letter-spacing:0.12em;padding:2px 8px;border-radius:3px;color:' + color + ';background:' + bg + ';border:1px solid ' + color + '33;';
+        badge.style.cssText = 'font-family:"JetBrains Mono",monospace;font-size:0.6rem;font-weight:700;letter-spacing:0.12em;padding:2px 8px;border-radius:3px;color:' + color + ';background:' + bg + ';border:1px solid ' + color + '22;';
         return badge;
     }
 
@@ -318,12 +311,11 @@
             var pre = code.parentElement;
             if (!pre) return;
 
-            // Style the pre/code block
+            // Style the pre/code block (light theme)
             pre.style.background = PALETTE.bg;
-            pre.style.borderRadius = '8px';
-            pre.style.border = '1px solid ' + PALETTE.border;
+            pre.style.borderRadius = '4px';
             pre.style.borderLeft = '4px solid ' + PALETTE.borderAccent;
-            pre.style.padding = '20px 24px';
+            pre.style.padding = '16px 20px';
             pre.style.margin = '1.5em 0';
             pre.style.overflowX = 'auto';
 
