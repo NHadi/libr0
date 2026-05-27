@@ -1,40 +1,21 @@
-/* libr0 Documentation — Clean rustdoc-inspired theme */
-
-/* ========================================
-   VARIABLES
-   ======================================== */
+/* Tokio-Inspired Markdown Styles for libr0 */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --rustdoc-blue: #4d76ae;
-    --rustdoc-blue-dark: #3a5f8a;
-    --rustdoc-blue-light: #e8f0fb;
-    --text-primary: #1a1a1a;
-    --text-secondary: #555;
-    --text-muted: #777;
-    --bg-code: #f5f5f5;
-    --border: #e0e0e0;
+    --rust-orange: #CE422B;
+    --tokio-magenta: #c83895;
+    --tokio-magenta-dark: #a82d7a;
 }
 
-/* ========================================
-   BASE
-   ======================================== */
-
-html {
-    background: #fff;
-}
-
+/* Base typography */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    font-size: 1.15rem;
+    font-family: 'Roboto', sans-serif;
+    font-size: 1.06em;
     -webkit-font-smoothing: antialiased;
-    background: #fff;
-    color: var(--text-primary);
-    line-height: 1.6;
 }
 
 #content {
     line-height: 1.7;
-    max-width: 960px;
 }
 
 /* Hide unnecessary elements */
@@ -43,115 +24,216 @@ h1#libr0 {
     display: none !important;
 }
 
+/* Professional Animated Background - Subtle Grid Flow */
+html {
+    background: #ffffff;
+}
+
+body {
+    position: relative;
+    overflow-x: hidden;
+    background: transparent;
+}
+
+/* Animated gradient background */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1000;
+    background:
+        radial-gradient(circle at 30% 20%, rgba(206, 66, 43, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 70% 80%, rgba(206, 66, 43, 0.02) 0%, transparent 50%),
+        linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+    animation: subtleShift 15s ease-in-out infinite;
+}
+
+@keyframes subtleShift {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.95; }
+}
+
+/* Subtle moving dots pattern */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -999;
+    background-image: radial-gradient(circle, rgba(206, 66, 43, 0.08) 1px, transparent 1px);
+    background-size: 30px 30px;
+    animation: dotPattern 40s linear infinite;
+    opacity: 0.4;
+}
+
+@keyframes dotPattern {
+    0% { background-position: 0 0; }
+    100% { background-position: 30px 30px; }
+}
+
+/* Canvas for additional effects */
+#memory-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -998;
+    pointer-events: none;
+}
+
+/* Ensure content is above background */
+#body-container,
+.page-wrapper,
+.page,
+#content {
+    background: transparent !important;
+    position: relative;
+    z-index: 1;
+}
+
+/* Hide default chapter title */
 #introduction .chapter-title {
     display: none;
 }
 
 /* ========================================
-   LANDING PAGE
+   LANDING PAGE - HERO SECTION
    ======================================== */
 
 .landing-hero {
     text-align: center;
-    padding: 80px 40px 60px;
-    margin: -20px -20px 60px -20px;
-    background: #fff;
-    border-bottom: 1px solid var(--border);
+    padding: 100px 40px 80px;
+    margin: -20px -20px 80px -20px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+}
+
+.landing-hero::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(206, 66, 43, 0.2), transparent);
 }
 
 .landing-logo {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 24px;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 30px;
     display: block;
+    animation: gentleFloat 4s ease-in-out infinite;
+}
+
+@keyframes gentleFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
 }
 
 .landing-title {
-    font-size: 3rem;
+    font-size: 4rem;
     font-weight: 700;
-    margin: 0 0 12px 0;
+    margin: 0 0 16px 0;
     color: var(--text-primary);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
     line-height: 1.1;
 }
 
 .landing-title a {
     text-decoration: none;
-    color: inherit;
+    color: var(--rust-orange);
 }
 
 .landing-subtitle {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 400;
     color: var(--text-secondary);
-    margin: 0 0 16px 0;
+    margin: 0 0 24px 0;
     line-height: 1.4;
 }
 
 .landing-description {
-    font-size: 1rem;
+    font-size: 1.125rem;
     max-width: 600px;
-    margin: 0 auto 32px;
+    margin: 0 auto 40px;
     line-height: 1.7;
     color: var(--text-secondary);
 }
 
+/* Action Buttons */
 .landing-actions {
     display: flex;
-    gap: 12px;
+    gap: 16px;
     justify-content: center;
     flex-wrap: wrap;
-    margin-top: 32px;
+    margin-top: 40px;
 }
 
 .btn-primary {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 24px;
-    background: var(--rustdoc-blue);
+    gap: 10px;
+    padding: 14px 32px;
+    background: var(--rust-orange);
     color: white !important;
     text-decoration: none;
-    border-radius: 4px;
-    font-weight: 500;
-    font-size: 0.95rem;
-    transition: background 0.15s;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(206, 66, 43, 0.2);
 }
 
 .btn-primary:hover {
-    background: var(--rustdoc-blue-dark);
-    text-decoration: none !important;
+    background: var(--rust-orange-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(206, 66, 43, 0.3);
 }
 
 .btn-secondary {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 24px;
-    background: transparent;
+    gap: 10px;
+    padding: 14px 32px;
+    background: white;
     color: var(--text-primary) !important;
     text-decoration: none;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    font-weight: 500;
-    font-size: 0.95rem;
-    transition: border-color 0.15s;
+    border: 1.5px solid #e5e5e5;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-secondary:hover {
-    border-color: var(--rustdoc-blue);
-    color: var(--rustdoc-blue) !important;
-    text-decoration: none !important;
+    border-color: var(--rust-orange);
+    color: var(--rust-orange) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* Stats */
+/* ========================================
+   STATS SECTION
+   ======================================== */
+
 .landing-stats {
     display: flex;
     justify-content: center;
-    gap: 80px;
-    padding: 40px;
-    margin: 0 -20px 60px -20px;
-    border-bottom: 1px solid var(--border);
+    gap: 100px;
+    padding: 60px 40px;
+    margin: 0 -20px 80px -20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    background: rgba(250, 250, 250, 0.5);
 }
 
 .stat-item {
@@ -159,73 +241,81 @@ h1#libr0 {
 }
 
 .stat-number {
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: 700;
-    color: var(--rustdoc-blue);
+    color: var(--rust-orange);
     line-height: 1;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 .stat-label {
-    font-size: 0.8rem;
+    font-size: 0.875rem;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-muted);
-    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--text-secondary);
+    font-weight: 600;
 }
 
-/* Feature cards */
+/* ========================================
+   FEATURE CARDS
+   ======================================== */
+
 .feature-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
-    margin: 40px 0;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 32px;
+    margin: 60px 0;
 }
 
 .feature-card {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 24px;
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    padding: 32px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
 .feature-card:hover {
-    border-color: var(--rustdoc-blue);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+    border-color: rgba(206, 66, 43, 0.3);
 }
 
 .feature-icon {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 16px;
-    color: var(--rustdoc-blue);
+    margin-bottom: 20px;
+    color: var(--rust-orange);
 }
 
 .feature-card h3 {
     color: var(--text-primary);
-    margin: 0 0 8px 0;
-    font-size: 1.1rem;
-    font-weight: 600;
+    margin: 0 0 12px 0;
+    font-size: 1.25rem;
+    font-weight: 700;
     line-height: 1.3;
 }
 
 .feature-card h3 a {
     text-decoration: none;
-    color: inherit;
+    color: var(--text-primary);
+    transition: color 0.2s;
 }
 
 .feature-card h3 a:hover {
-    color: var(--rustdoc-blue);
+    color: var(--rust-orange);
 }
 
 .feature-card h3 code {
     background: none;
     padding: 0;
-    color: var(--rustdoc-blue);
-    font-size: 1.1rem;
-    font-weight: 600;
+    color: var(--rust-orange);
+    font-size: 1.25rem;
+    font-weight: 700;
 }
 
 .feature-card p {
@@ -235,368 +325,148 @@ h1#libr0 {
     font-size: 0.95rem;
 }
 
-.feature-card code {
-    font-family: "SF Mono", Monaco, Consolas, monospace;
-    background: var(--bg-code);
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-size: 0.88em;
-    color: var(--rustdoc-blue-dark);
-}
-
-/* Philosophy */
-.philosophy-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 24px;
-    margin: 40px 0;
-}
-
-.philosophy-item {
-    padding: 24px;
-    background: #fff;
-    border-left: 3px solid var(--rustdoc-blue);
-    border-radius: 2px;
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--rustdoc-blue);
-}
-
-.philosophy-item h4 {
-    color: var(--rustdoc-blue);
-    margin: 0 0 8px 0;
-    font-size: 1rem;
-    font-weight: 600;
-}
-
-.philosophy-item p {
-    line-height: 1.6;
-    color: var(--text-secondary);
-    margin: 0;
-    font-size: 0.95rem;
-}
-
 /* ========================================
-   TYPOGRAPHY
+   TOKIO-STYLE MARKDOWN CONTENT
    ======================================== */
 
+/* Headings - all black, clean spacing */
 #content main h1,
 #content main h2,
 #content main h3,
 #content main h4 {
-    color: var(--text-primary) !important;
-    font-weight: 600;
+    color: #000000 !important;
 }
 
 #content main h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin: 0 0 1rem 0;
+    font-size: 2.5rem;
+    font-weight: 400;
+    margin: 0 0 0.5rem 0;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid #e5e5e5;
 }
 
-#content main h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 2rem 0 0.75rem 0;
-    padding-bottom: 0.4rem;
-    border-bottom: 1px solid var(--border);
-}
+#content main h2 { font-size: 1.75rem; font-weight: 500; margin: 2.5rem 0 1rem 0; }
+#content main h3 { font-size: 1.4rem; font-weight: 500; margin: 2rem 0 0.75rem 0; }
+#content main h4 { font-size: 1.1rem; font-weight: 600; margin: 1.5rem 0 0.5rem 0; }
 
-#content main h2::after {
-    display: none !important;
-}
-
-#content main h2::before {
-    display: none;
-}
-
-#content main h3 {
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin: 1.5rem 0 0.5rem 0;
-}
-
-#content main h4 {
-    font-size: 1.05rem;
-    font-weight: 600;
-    margin: 1.25rem 0 0.5rem 0;
-}
-
+/* Remove heading decorations */
 #content main h1::before,
+#content main h2::before,
 #content main h3::before,
-#content main h4::before {
-    display: none;
-}
+#content main h4::before { display: none; }
 
+/* Heading anchor links - black */
 #content main a.header {
-    color: inherit !important;
+    color: #000000 !important;
     text-decoration: none;
 }
 
-/* Body text */
+/* Text */
 #content main p {
-    line-height: 1.75;
-    margin: 0 0 1em 0;
-    color: var(--text-primary);
+    line-height: 1.8;
+    margin: 0 0 1.2em 0;
 }
 
 #content main strong {
     font-weight: 600;
-    color: #000;
 }
 
 /* Lists */
 #content main ul,
 #content main ol {
-    margin: 1em 0;
-    padding-left: 1.8em;
+    margin: 1.2em 0;
+    padding-left: 2em;
 }
 
 #content main li {
-    margin: 0.4rem 0;
-    line-height: 1.7;
+    margin: 1rem 0;
+    line-height: 1.8;
 }
 
 #content main ul li::marker {
-    color: var(--rustdoc-blue-dark);
+    color: var(--tokio-magenta);
+    font-size: 1.2em;
 }
 
 #content main ol li::marker {
     font-weight: 600;
-    color: #333;
 }
 
 /* Links */
 #content main a {
-    color: var(--rustdoc-blue);
+    color: var(--tokio-magenta);
     text-decoration: none;
 }
 
 #content main a:hover {
+    color: var(--tokio-magenta-dark);
     text-decoration: underline;
 }
 
 /* Inline code */
 #content main code {
-    background: #eef1f5;
-    color: #1a1a1a;
-    padding: 0.15em 0.45em;
+    background: #f0f0f0;
+    padding: 0.2em 0.4em;
     border-radius: 3px;
     font-size: 0.9em;
-    font-family: "SF Mono", Monaco, Consolas, "Courier New", monospace;
-    border: 1px solid #dde2e8;
+    font-family: 'SF Mono', Monaco, monospace;
 }
 
 #content main a code {
-    color: var(--rustdoc-blue);
-    background: #eef1f5;
+    color: var(--tokio-magenta);
 }
 
-/* ========================================
-   CODE BLOCKS
-   ======================================== */
-
+/* Code blocks */
 #content main pre {
-    background: #1e1e2e;
-    border-radius: 6px;
+    background: #f6f8fa;
+    border-radius: 4px;
     padding: 16px;
-    margin: 1.25em 0;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    position: relative;
-    overflow-x: auto;
+    margin: 1.5em 0;
 }
 
 #content main pre code {
     background: none;
     padding: 0;
-    color: #cdd6f4;
-    font-weight: 400;
-    border: none;
-    font-size: inherit;
 }
 
 #content main pre pre {
     background: none;
     padding: 0;
     margin: 0;
-    border: none;
 }
 
-/* Language label */
-.code-lang-label {
-    position: absolute;
-    top: 6px;
-    left: 10px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #a6adc8;
-    background: rgba(255, 255, 255, 0.08);
-    padding: 2px 8px;
-    border-radius: 3px;
-    pointer-events: none;
-    font-family: -apple-system, sans-serif;
-}
+/* Special backgrounds for diagram blocks */
 
-#content main pre.enhanced-code-block {
-    padding-top: 30px;
+/* Bob diagrams (rendered as SVG) */
+#content main div:has(svg.svgbob) {
+    background: #fff8f0;
+    border-left: 4px solid var(--rust-orange);
+    border-radius: 4px;
+    padding: 16px;
+    margin: 1.5em 0;
 }
-
-/* Copy button */
-.code-copy-btn {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #6c7086;
-    font-size: 0.7rem;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 3px;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.15s;
-    font-family: -apple-system, sans-serif;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-}
-
-#content main pre.enhanced-code-block:hover .code-copy-btn {
-    opacity: 1;
-}
-
-.code-copy-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: #bac2de;
-}
-
-.code-copy-btn.copied {
-    color: #a6e3a1;
-    border-color: rgba(166, 227, 161, 0.3);
-}
-
-/* ========================================
-   MEMORY DIAGRAMS
-   ======================================== */
 
 /* Mermaid diagrams */
 #content main div:has(.mermaid),
 #content main pre:has(code.language-mermaid) {
-    background: #f5f7fa;
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--rustdoc-blue);
-    border-radius: 2px;
-    padding: 20px 24px;
+    background: #f0f9ff;
+    border-left: 4px solid #0ea5e9;
+    border-radius: 4px;
+    padding: 16px;
     margin: 1.5em 0;
-    position: relative;
-    overflow-x: auto;
 }
 
-#content main div:has(.mermaid)::before,
-#content main pre:has(code.language-mermaid)::before {
-    content: 'Diagram';
-    position: absolute;
-    top: 8px;
-    right: 10px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #fff;
-    background: var(--rustdoc-blue);
-    padding: 2px 10px;
-    border-radius: 3px;
-    font-family: -apple-system, sans-serif;
-    z-index: 1;
-}
-
-#content main div:has(.mermaid):hover,
-#content main pre:has(code.language-mermaid):hover {
-    border-left-color: var(--rustdoc-blue-dark);
-}
-
-#content main div.mermaid,
-#content main pre.mermaid {
-    background: transparent;
-    border: none;
-    padding: 0;
-    margin: 0;
-}
-
-#content main .mermaid svg {
-    max-width: 100%;
-    height: auto;
-}
-
-/* Mermaid subgraph styling for STACK/HEAP regions */
-#content main .mermaid .node.cluster rect,
-#content main .mermaid svg .cluster rect {
-    rx: 4;
-    ry: 4;
-}
-
-/* ========================================
-   SECTION DIVIDERS
-   ======================================== */
-
-#content main hr {
-    border: none;
-    height: 1px;
-    background: var(--border);
-    margin: 2.5em 0;
-}
-
-/* ========================================
-   KEY TAKEAWAYS
-   ======================================== */
-
-.key-takeaways-heading {
-    color: var(--text-primary) !important;
-    border-bottom: 2px solid var(--rustdoc-blue) !important;
-}
-
-.key-takeaways-heading::after {
-    display: none !important;
-}
-
-.key-takeaways-list {
-    background: #f9fafb;
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--rustdoc-blue);
-    border-radius: 2px;
-    padding: 16px 16px 16px 40px !important;
-    margin: 0.75em 0 2em 0 !important;
-}
-
-.key-takeaways-list li {
-    padding: 6px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.key-takeaways-list li:last-child {
-    border-bottom: none;
-}
-
-/* ========================================
-   CALLOUTS
-   ======================================== */
-
+/* Blockquotes - Tokio style with magenta accent */
 #content main blockquote {
-    border-radius: 2px;
-    padding: 12px 16px 12px 20px;
-    margin: 1.25em 0;
-    border: 1px solid var(--border);
-    border-left: 3px solid #bbb;
-    background: #fafafa;
+    border-left: 4px solid var(--tokio-magenta);
+    background: var(--tokio-magenta-light);
+    padding: 1em 1.5em;
+    margin: 1.5em 0;
+    border-radius: 4px;
 }
 
 #content main blockquote p {
-    margin: 0.3em 0;
-    font-size: 0.95em;
-    color: var(--text-primary);
+    margin: 0.5em 0;
 }
 
 #content main blockquote p:first-child {
@@ -607,553 +477,225 @@ h1#libr0 {
     margin-bottom: 0;
 }
 
-.callout-icon {
-    font-size: 1rem;
-    margin-right: 6px;
-    font-style: normal;
-}
-
-/* Note — blue accent */
-#content main blockquote.callout-note {
-    border-left-color: var(--rustdoc-blue);
-    background: var(--rustdoc-blue-light);
-}
-
-/* Warning — red accent */
-#content main blockquote.callout-warning {
-    border-left-color: #d4393a;
-    background: #fef2f2;
-}
-
-/* Important — amber accent */
-#content main blockquote.callout-important {
-    border-left-color: #c27803;
-    background: #fefce8;
-}
-
-/* Key Insight — purple accent */
-#content main blockquote.callout-insight {
-    border-left-color: #7c3aed;
-    background: #f5f3ff;
-}
-
-/* Tip — green accent */
-#content main blockquote.callout-tip {
-    border-left-color: #389e0d;
-    background: #f0faf0;
-}
-
-/* Implementation Note — gray accent */
-#content main blockquote.callout-impl {
-    border-left-color: #8c8c8c;
-    background: #f5f5f5;
-}
-
-/* ========================================
-   COLLAPSIBLE SECTIONS
-   ======================================== */
-
-.collapsible-summary {
-    cursor: pointer;
-    padding: 8px 14px;
-    background: #f5f5f5;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    list-style: none;
-    color: var(--text-primary);
-    margin-bottom: 0;
-}
-
-.collapsible-summary:hover {
-    background: #eee;
-}
-
-.collapsible-summary::before {
-    content: '\25B8  ';
-    color: var(--rustdoc-blue);
-}
-
-details[open] > .collapsible-summary {
-    border-radius: 2px 2px 0 0;
-    border-bottom-color: transparent;
-}
-
-details[open] > .collapsible-summary::before {
-    content: '\25BE  ';
-}
-
-details[style] {
-    margin: 1em 0;
-}
-
-details[style] > *:not(summary) {
-    padding: 0 4px;
-}
-
-/* ========================================
-   TABLES
-   ======================================== */
-
+/* Tables */
 #content main table {
     border-collapse: collapse;
     width: 100%;
-    margin: 1.25em 0;
-    border: 1px solid var(--border);
+    margin: 1.5em 0;
 }
 
 #content main table th,
 #content main table td {
-    border: 1px solid #eee;
-    padding: 0.6em 0.8em;
+    border: 1px solid var(--border-color);
+    padding: 0.75em 1em;
     text-align: left;
 }
 
 #content main table th {
-    background: #f5f5f5;
+    background: var(--bg-subtle);
     font-weight: 600;
     color: var(--text-primary);
-    font-size: 0.88em;
 }
 
 #content main table td {
     color: var(--text-primary);
 }
 
-#content main table tr:hover td {
-    background: #fafafa;
+/* Horizontal rules */
+#content main hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 2.5em 0;
 }
 
 /* ========================================
-   MENU BAR
+   PHILOSOPHY SECTION
    ======================================== */
 
-#menu-bar {
-    background-color: #fff !important;
-    border-bottom: 1px solid var(--border) !important;
+.philosophy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 32px;
+    margin: 60px 0;
 }
 
+.philosophy-item {
+    padding: 32px;
+    background: white;
+    border-left: 4px solid var(--rust-orange);
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.philosophy-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.philosophy-item h4 {
+    color: var(--rust-orange);
+    margin: 0 0 12px 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+}
+
+.philosophy-item p {
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+/* ========================================
+   MENU BAR / HEADER
+   ======================================== */
+
+/* Tokio-style header - clean white background with black icons */
+#menu-bar {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Black icons and text in menu bar */
 #menu-bar .icon-button,
 #menu-bar a,
 #menu-bar i {
-    color: var(--text-primary) !important;
+    color: #000000 !important;
 }
 
 #menu-bar .icon-button:hover,
 #menu-bar a:hover,
 #menu-bar i:hover {
-    color: var(--text-secondary) !important;
+    color: #4a4a4a !important;
 }
 
 /* ========================================
-   SIDEBAR
+   GENERAL IMPROVEMENTS
    ======================================== */
 
-#sidebar {
-    font-size: 1rem !important;
-}
-
-#sidebar .sidebar-scrollbox {
-    font-size: 1rem;
-}
-
-#sidebar a {
-    transition: background 0.1s;
-    border-radius: 2px;
-    font-size: 1rem;
-    padding: 4px 8px;
-}
-
-#sidebar a:hover {
-    background: var(--rustdoc-blue-light);
-    color: var(--rustdoc-blue);
-}
-
-#sidebar .active {
-    color: var(--rustdoc-blue) !important;
-    font-weight: 600;
-    background: var(--rustdoc-blue-light);
-}
-
-#sidebar .part-title {
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--rustdoc-blue);
-    font-weight: 600;
-    margin-top: 20px;
-}
-
-/* ========================================
-   GENERAL
-   ======================================== */
-
+/* Override general pre styling - let main content styles handle it */
 pre {
     border: none;
+    border-radius: 4px;
 }
 
 code {
-    font-family: "SF Mono", Monaco, Consolas, "Courier New", monospace;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
 }
 
+/* Better blockquotes */
+blockquote {
+    border-left: 3px solid var(--rust-orange);
+    background: rgba(250, 250, 250, 0.8);
+    padding: 20px 24px;
+    margin: 24px 0;
+    border-radius: 4px;
+}
+
+/* Enhance lists */
+ul li, ol li {
+    margin: 10px 0;
+    line-height: 1.7;
+    color: var(--text-secondary);
+}
+
+/* Clean link styling */
 a {
-    color: var(--rustdoc-blue);
+    color: var(--rust-orange);
     text-decoration: none;
+    transition: color 0.2s;
 }
 
 a:hover {
-    color: var(--rustdoc-blue-dark);
+    color: var(--rust-orange-light);
 }
 
+/* Better badges */
 a img[src*="badge"] {
     display: inline-block;
     margin: 4px;
 }
 
+/* Final CTA Section */
 .btn-large {
-    padding: 12px 36px !important;
-    font-size: 1rem !important;
+    padding: 16px 48px !important;
+    font-size: 1.125rem !important;
+    border-radius: 10px !important;
 }
 
 /* ========================================
-   RESPONSIVE
+   RESPONSIVE DESIGN
    ======================================== */
 
 @media (max-width: 768px) {
     .landing-hero {
-        padding: 60px 20px 40px;
+        padding: 60px 24px 50px;
     }
 
     .landing-title {
-        font-size: 2.2rem;
+        font-size: 2.5rem;
     }
 
     .landing-subtitle {
-        font-size: 1.1rem;
+        font-size: 1.25rem;
     }
 
     .landing-stats {
         gap: 40px;
         flex-direction: column;
-        padding: 32px 20px;
+        padding: 40px 24px;
     }
 
     .stat-number {
-        font-size: 1.8rem;
+        font-size: 2rem;
     }
 
     .feature-grid {
         grid-template-columns: 1fr;
-        gap: 16px;
+        gap: 24px;
     }
 
     .philosophy-grid {
         grid-template-columns: 1fr;
-        gap: 16px;
+        gap: 24px;
     }
 
-    #content main h1 {
-        font-size: 1.6rem;
-    }
-
-    #content main h2 {
-        font-size: 1.3rem;
-    }
-
-    .code-copy-btn {
-        opacity: 1;
+    h2 {
+        font-size: 2rem;
+        margin: 60px 0 32px 0;
     }
 }
 
 /* ========================================
-   DARK THEME — NAVY / COAL / AYU
+   DARK THEME SUPPORT
    ======================================== */
 
-/* Dark: Landing */
+.navy body::before,
+.coal body::before,
+.ayu body::before {
+    background:
+        radial-gradient(circle at 30% 20%, rgba(206, 66, 43, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 70% 80%, rgba(206, 66, 43, 0.04) 0%, transparent 50%),
+        linear-gradient(180deg, #0d1117 0%, #161b22 100%);
+}
+
 .navy .landing-hero,
 .coal .landing-hero,
 .ayu .landing-hero {
-    background: var(--bg);
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+    background: rgba(13, 17, 23, 0.9);
+    backdrop-filter: blur(20px);
 }
 
 .navy .feature-card,
 .coal .feature-card,
 .ayu .feature-card {
-    background: var(--bg);
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-.navy .feature-card:hover,
-.coal .feature-card:hover,
-.ayu .feature-card:hover {
-    border-color: var(--rustdoc-blue);
+    background: rgba(22, 27, 34, 0.8);
+    border-color: rgba(206, 66, 43, 0.2);
 }
 
 .navy .philosophy-item,
 .coal .philosophy-item,
 .ayu .philosophy-item {
-    background: var(--bg);
-    border-color: rgba(255, 255, 255, 0.1);
-    border-left-color: var(--rustdoc-blue);
-}
-
-/* Dark: Headings */
-.navy #content main h1,
-.coal #content main h1,
-.ayu #content main h1 {
-    color: var(--fg) !important;
-    border-bottom-color: rgba(255, 255, 255, 0.1);
-}
-
-.navy #content main h2,
-.coal #content main h2,
-.ayu #content main h2 {
-    color: var(--fg) !important;
-    border-bottom-color: rgba(255, 255, 255, 0.08);
-}
-
-.navy #content main h3,
-.coal #content main h3,
-.ayu #content main h3 {
-    color: var(--fg) !important;
-}
-
-.navy #content main h4,
-.coal #content main h4,
-.ayu #content main h4 {
-    color: var(--fg) !important;
-}
-
-/* Dark: Body text */
-.navy #content main p,
-.coal #content main p,
-.ayu #content main p {
-    color: var(--fg);
-}
-
-.navy #content main strong,
-.coal #content main strong,
-.ayu #content main strong {
-    color: #e0e0e0;
-}
-
-/* Dark: Code */
-.navy #content main pre,
-.coal #content main pre,
-.ayu #content main pre {
-    background: #11111b;
-    border-color: rgba(255, 255, 255, 0.06);
-}
-
-.navy #content main pre code,
-.coal #content main pre code,
-.ayu #content main pre code {
-    color: #cdd6f4;
-}
-
-.navy #content main code,
-.coal #content main code,
-.ayu #content main code {
-    background: rgba(255, 255, 255, 0.08);
-    color: #e0e0e0;
-}
-
-.navy .code-lang-label,
-.coal .code-lang-label,
-.ayu .code-lang-label {
-    background: rgba(255, 255, 255, 0.1);
-    color: #7f849c;
-}
-
-.navy .code-copy-btn,
-.coal .code-copy-btn,
-.ayu .code-copy-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.12);
-    color: #7f849c;
-}
-
-.navy .code-copy-btn:hover,
-.coal .code-copy-btn:hover,
-.ayu .code-copy-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: #bac2de;
-}
-
-/* Dark: Mermaid diagrams */
-.navy #content main div:has(.mermaid),
-.coal #content main div:has(.mermaid),
-.ayu #content main div:has(.mermaid),
-.navy #content main pre:has(code.language-mermaid),
-.coal #content main pre:has(code.language-mermaid),
-.ayu #content main pre:has(code.language-mermaid) {
-    background: rgba(0, 0, 0, 0.2);
-    border-color: rgba(255, 255, 255, 0.08);
-    border-left-color: var(--rustdoc-blue);
-}
-
-.navy #content main div:has(.mermaid)::before,
-.coal #content main div:has(.mermaid)::before,
-.ayu #content main div:has(.mermaid)::before,
-.navy #content main pre:has(code.language-mermaid)::before,
-.coal #content main pre:has(code.language-mermaid)::before,
-.ayu #content main pre:has(code.language-mermaid)::before {
-    background: var(--rustdoc-blue);
-    color: #fff;
-}
-
-/* Dark: HR */
-.navy #content main hr,
-.coal #content main hr,
-.ayu #content main hr {
-    background: rgba(255, 255, 255, 0.08);
-}
-
-/* Dark: Key Takeaways */
-.navy .key-takeaways-list,
-.coal .key-takeaways-list,
-.ayu .key-takeaways-list {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.08);
-}
-
-.navy .key-takeaways-list li,
-.coal .key-takeaways-list li,
-.ayu .key-takeaways-list li {
-    border-bottom-color: rgba(255, 255, 255, 0.06);
-}
-
-/* Dark: Callouts */
-.navy #content main blockquote,
-.coal #content main blockquote,
-.ayu #content main blockquote {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.08);
-    border-left-color: #666;
-}
-
-.navy #content main blockquote.callout-note,
-.coal #content main blockquote.callout-note,
-.ayu #content main blockquote.callout-note {
-    border-left-color: var(--rustdoc-blue);
-    background: rgba(77, 118, 174, 0.1);
-}
-
-.navy #content main blockquote.callout-warning,
-.coal #content main blockquote.callout-warning,
-.ayu #content main blockquote.callout-warning {
-    border-left-color: #e06060;
-    background: rgba(212, 57, 58, 0.08);
-}
-
-.navy #content main blockquote.callout-important,
-.coal #content main blockquote.callout-important,
-.ayu #content main blockquote.callout-important {
-    border-left-color: #daa520;
-    background: rgba(194, 120, 3, 0.08);
-}
-
-.navy #content main blockquote.callout-insight,
-.coal #content main blockquote.callout-insight,
-.ayu #content main blockquote.callout-insight {
-    border-left-color: #9b7adf;
-    background: rgba(124, 58, 237, 0.08);
-}
-
-.navy #content main blockquote.callout-tip,
-.coal #content main blockquote.callout-tip,
-.ayu #content main blockquote.callout-tip {
-    border-left-color: #5cb85c;
-    background: rgba(56, 158, 13, 0.08);
-}
-
-.navy #content main blockquote.callout-impl,
-.coal #content main blockquote.callout-impl,
-.ayu #content main blockquote.callout-impl {
-    border-left-color: #888;
-    background: rgba(255, 255, 255, 0.04);
-}
-
-/* Dark: Tables */
-.navy #content main table,
-.coal #content main table,
-.ayu #content main table {
-    border-color: rgba(255, 255, 255, 0.08);
-}
-
-.navy #content main table th,
-.coal #content main table th,
-.ayu #content main table th {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--fg);
-    border-color: rgba(255, 255, 255, 0.06);
-}
-
-.navy #content main table td,
-.coal #content main table td,
-.ayu #content main table td {
-    color: var(--fg);
-    border-color: rgba(255, 255, 255, 0.04);
-}
-
-.navy #content main table tr:hover td,
-.coal #content main table tr:hover td,
-.ayu #content main table tr:hover td {
-    background: rgba(255, 255, 255, 0.03);
-}
-
-/* Dark: Collapsible */
-.navy .collapsible-summary,
-.coal .collapsible-summary,
-.ayu .collapsible-summary {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--fg);
-    border-color: rgba(255, 255, 255, 0.08);
-}
-
-.navy .collapsible-summary:hover,
-.coal .collapsible-summary:hover,
-.ayu .collapsible-summary:hover {
-    background: rgba(255, 255, 255, 0.08);
-}
-
-/* Dark: Sidebar */
-.navy #sidebar a:hover,
-.coal #sidebar a:hover,
-.ayu #sidebar a:hover {
-    background: rgba(77, 118, 174, 0.15);
-}
-
-/* Dark: Menu bar */
-.navy #menu-bar,
-.coal #menu-bar,
-.ayu #menu-bar {
-    background-color: var(--bg) !important;
-    border-bottom-color: rgba(255, 255, 255, 0.06) !important;
-}
-
-.navy #menu-bar .icon-button,
-.coal #menu-bar .icon-button,
-.ayu #menu-bar .icon-button,
-.navy #menu-bar a,
-.coal #menu-bar a,
-.ayu #menu-bar a,
-.navy #menu-bar i,
-.coal #menu-bar i,
-.ayu #menu-bar i {
-    color: var(--fg) !important;
-}
-
-.navy #menu-bar .icon-button:hover,
-.coal #menu-bar .icon-button:hover,
-.ayu #menu-bar .icon-button:hover,
-.navy #menu-bar a:hover,
-.coal #menu-bar a:hover,
-.ayu #menu-bar a:hover,
-.navy #menu-bar i:hover,
-.coal #menu-bar i:hover,
-.ayu #menu-bar i:hover {
-    color: var(--fg) !important;
+    background: rgba(22, 27, 34, 0.8);
 }

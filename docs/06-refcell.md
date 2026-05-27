@@ -76,7 +76,7 @@ let mut cell = RefCell::new(5);  // Note: mut cell
 
 If you have `&mut RefCell<T>`, you don't need interior mutability at all - you already have exclusive access! You could've just used `T` directly. The whole point of `RefCell` is `borrow()` and `borrow_mut()` - they let you mutate through `&self`.
 
-See the [Cell chapter's get_mut section](./05-cell.md:454) for more details on why `get_mut` defeats the purpose of interior mutability.
+See the [Cell chapter's get_mut section](./05-cell-1-building.md#get_mut---common-confusion-about-getting-references-from-cell) for more details on why `get_mut` defeats the purpose of interior mutability.
 
 ## Why Cell is Copy-only and RefCell is Not
 
@@ -110,13 +110,14 @@ let borrowed = cell.borrow();  // Returns &String (no copy!)
 
 RefCell uses a simple counter (`borrow_count`) to track the borrow state:
 
-```mermaid
-classDiagram
-    class RefCell~T~ {
-        borrow_count: Cell~isize~
-        value: UnsafeCell~T~
-    }
-    note for RefCell~T~ "borrow_count:\n 0 = not borrowed\n >0 = # of immutable borrows\n -1 = mutably borrowed"
+```bob
++-------------------------------+
+| "RefCell<T>"                  |
++-------------------------------+
+| "borrow_count: Cell<isize>" <-+------ The counter!
+| "value: UnsafeCell<T>"        |       " 0 = not borrowed"                                                  
++-------------------------------+       ">0 = # of immutable borrows"
+                                        "-1 = mutably borrowed"
 ```
 
 How `borrow_count` changes:
@@ -573,6 +574,3 @@ Practice using RefCell with hands-on exercises in [06_refcell.rs](../examples/06
 
 **Complete solutions:** Switch to the `answers` branch with `git checkout answers` to see completed exercises
 
-## Next Chapter
-
-[Rc](./07-rc.md) - Reference counting for shared ownership.

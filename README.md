@@ -2,7 +2,7 @@
   <img src="theme/libr0-logo.svg" alt="libr0 logo" width="200">
   <h1>libr0</h1>
 
-  [![Deploy Documentation](https://github.com/NHadi/libr0/actions/workflows/deploy-docs.yml/badge.svg)](https://github.com/NHadi/libr0/actions/workflows/deploy-docs.yml)
+  [![Deploy Documentation](https://github.com/arinal/libr0/actions/workflows/deploy-docs.yml/badge.svg)](https://github.com/arinal/libr0/actions/workflows/deploy-docs.yml)
 
   <h3>Building Rust's Standard Library from Scratch</h3>
 
@@ -12,7 +12,7 @@
   </p>
 
   <p>
-    <a href="https://nhadi.github.io/libr0/"><strong>Read Online</strong></a>
+    <a href="https://arinal.github.io/libr0/"><strong>Read Online</strong></a>
   </p>
 
   <p>
@@ -65,7 +65,7 @@ For low-level concepts (syscalls, process memory, blocking vs non-blocking opera
 
 ## Table of Contents
 
-**Read the full book at [nhadi.github.io/libr0](https://nhadi.github.io/libr0/)**
+**Read the full book at [arinal.github.io/libr0](https://arinal.github.io/libr0/)**
 
 ### Part 1: Foundational Types
 

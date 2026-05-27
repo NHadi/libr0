@@ -234,14 +234,14 @@ A reference to a DST is called a **fat pointer** because it contains extra metad
 ### Fat Pointer Layout
 
 **For slices (`&[T]`) and string slices (`&str`):**
-```mermaid
-flowchart LR
-    subgraph fat_ptr["Fat Pointer — 16 bytes"]
-        ptr["<b>Data Pointer</b><br/>8 bytes"]
-        len["<b>Length</b><br/>8 bytes"]
-    end
-    data["Actual data<br/>(heap/stack)"]
-    ptr -->|points to| data
+```bob
++---------------------+---------------------+
+|   Data Pointer      |      Length         |
+|    "(8 bytes)"      |     "(8 bytes)"     |
++---------------------+---------------------+
+        |
+        v
+  Points to actual data on heap/stack
 ```
 
 Example:
@@ -255,16 +255,14 @@ let slice: &[i32] = &data[1..4];  // [2, 3, 4]
 ```
 
 **For trait objects (`&dyn Trait`):**
-```mermaid
-flowchart LR
-    subgraph fat_ptr["Fat Pointer — 16 bytes"]
-        ptr["<b>Data Pointer</b><br/>8 bytes"]
-        vtable["<b>VTable Pointer</b><br/>8 bytes"]
-    end
-    data["Concrete data<br/>(e.g. Dog)"]
-    vtable_data["VTable<br/>(function pointers)"]
-    ptr -->|points to| data
-    vtable -->|points to| vtable_data
+```bob
+┌─────────────────────┬─────────────────────┐
+│   Data Pointer      │   VTable Pointer    │
+│    (8 bytes)        │     (8 bytes)       │
+└─────────────────────┴─────────────────────┘
+        ↓                     ↓
+  Points to data        Points to vtable
+                        (function pointers)
 ```
 
 Example:
@@ -341,14 +339,12 @@ println!("{}", std::mem::size_of::<&[i32]>());  // ✅ OK: 16 bytes (fat pointer
 
 The reference has a known size even though the thing it points to doesn't!
 
-```mermaid
-flowchart LR
-    subgraph ref["&[i32] — Sized, 16 bytes"]
-        ptr["ptr"]
-        len["len"]
-    end
-    data["[i32]<br/>(unsized)"]
-    ptr -->|points to| data
+```bob
+[i32]           &[i32]
+(unsized)       (sized - 16 bytes)
+  ???           ┌─────────┬─────────┐
+  ???  <────────│ ptr     │ len     │
+  ???           └─────────┴─────────┘
 ```
 
 ### Confusion #2: "String is Sized, but str is Not"
@@ -364,23 +360,18 @@ println!("{}", std::mem::size_of::<&str>());    // ✅ 16 bytes
 - `str` is the actual text data - variable length
 - `&str` is a fat pointer to text data - always 16 bytes
 
-```mermaid
-flowchart LR
-    subgraph string["String — 24 bytes"]
-        sp["ptr"]
-        sl["len: 5"]
-        sc["cap: 10"]
-    end
-    subgraph ref["&str — 16 bytes"]
-        rp["ptr"]
-        rl["len"]
-    end
-    heap["'hello'<br/>(heap, unsized)"]
-    sp -->|points to| heap
-    rp -->|points to| heap
+```bob
+String (24 bytes)          str (unsized)           &str (16 bytes)
+┌────────────────┐         ??????????              ┌─────────┬─────────┐
+│ ptr ────────┐  │         ?????????               │ ptr     │ len     │
+│ len: 5      │  │         ?????????               └────┬────┴─────────┘
+│ cap: 10     │  │         ?????????                    │
+└─────────────┘  │                                      │
+                 └────────> h e l l o ??? <──────────────┘
+                            (on heap)
 ```
 
-### Confusion #3: "Box<T> is Sized, but Box<[T]> Also Exists"
+### Confusion #3: "Box\<T\> is Sized, but Box\<[T]\> Also Exists"
 
 ```rust
 println!("{}", std::mem::size_of::<Box<i32>>());    // 8 bytes (thin pointer)
@@ -605,4 +596,4 @@ This is how types like `std::path::Path` work - they're essentially wrappers aro
 
 ---
 
-See also: [Appendix Index](appendix.md) | [Closures](appendix-closures.md) | [Dynamic Dispatch](appendix-dynamic-dispatch.md)
+See also: [Closures](appendix-closures-0-intro.md) | [Nested Types](appendix-nested-types.md)
