@@ -1,5 +1,5 @@
 /* Tokio-Inspired Markdown Styles for libr0 */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
 
 :root {
     --rust-orange: #CE422B;
@@ -437,7 +437,14 @@ body::after {
 
 /* Special backgrounds for diagram blocks */
 
-/* Bob diagrams (rendered as SVG) - handled by enhanced section below */
+/* Bob diagrams (rendered as SVG) */
+#content main div:has(svg.svgbob) {
+    background: #fff8f0;
+    border-left: 4px solid var(--rust-orange);
+    border-radius: 4px;
+    padding: 16px;
+    margin: 1.5em 0;
+}
 
 /* Mermaid diagrams */
 #content main div:has(.mermaid),
@@ -661,70 +668,6 @@ a img[src*="badge"] {
 }
 
 /* ========================================
-   PROFESSIONAL CHECK/CROSS ICONS
-   Replace ✅ and ❌ emoji with styled SVG icons
-   ======================================== */
-
-/* Inline icon styling for check and cross marks */
-.icon-check,
-.icon-cross {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    vertical-align: middle;
-    margin-right: 4px;
-    flex-shrink: 0;
-}
-
-.icon-check {
-    background: rgba(72, 187, 120, 0.15);
-    border: 1.5px solid rgba(72, 187, 120, 0.5);
-    color: #48bb78;
-}
-
-.icon-cross {
-    background: rgba(245, 101, 101, 0.12);
-    border: 1.5px solid rgba(245, 101, 101, 0.45);
-    color: #f56565;
-}
-
-.icon-check svg,
-.icon-cross svg {
-    width: 10px;
-    height: 10px;
-}
-
-/* Inside code blocks, make them slightly smaller */
-pre .icon-check,
-pre .icon-cross,
-code .icon-check,
-code .icon-cross {
-    width: 14px;
-    height: 14px;
-    margin-right: 2px;
-}
-
-pre .icon-check svg,
-pre .icon-cross svg,
-code .icon-check svg,
-code .icon-cross svg {
-    width: 8px;
-    height: 8px;
-}
-
-/* Table cells with icons */
-td .icon-check,
-td .icon-cross,
-th .icon-check,
-th .icon-cross {
-    width: 16px;
-    height: 16px;
-}
-
-/* ========================================
    DARK THEME SUPPORT
    ======================================== */
 
@@ -757,191 +700,11 @@ th .icon-cross {
     background: rgba(22, 27, 34, 0.8);
 }
 
-
 /* ========================================
-   ENHANCED MEMORY DIAGRAMS (cheats.rs style)
+   MEMORY LAYOUT BLOCKS (cheats.rs style)
+   Professional colored blocks for diagrams
    ======================================== */
 
-.mem-diagram-enhanced {
-    margin: 1.5em 0;
-    padding: 0;
-    border-radius: 4px;
-    overflow: hidden;
-    border-left: 4px solid var(--rust-orange);
-    background: #fff8f0;
-    font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', monospace;
-}
-
-.mem-diagram-section {
-    padding: 20px 24px;
-}
-
-.mem-diagram-section + .mem-diagram-section {
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.mem-diagram-title {
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #6b7280;
-    margin-bottom: 16px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.mem-diagram-layout {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-.mem-region {
-    flex: 1;
-    min-width: 180px;
-}
-
-.mem-region-header {
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    margin-bottom: 10px;
-    padding: 3px 8px;
-    border-radius: 3px;
-    display: inline-block;
-}
-
-.mem-region-stack .mem-region-header {
-    color: #15803d;
-    background: rgba(22, 163, 74, 0.08);
-    border: 1px solid rgba(22, 163, 74, 0.2);
-}
-
-.mem-region-heap .mem-region-header {
-    color: #1d4ed8;
-    background: rgba(37, 99, 235, 0.08);
-    border: 1px solid rgba(37, 99, 235, 0.2);
-}
-
-.mem-region-fields {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.mem-field {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 12px;
-    border-radius: 4px;
-    border: 1px solid;
-    font-size: 0.78rem;
-    min-height: 32px;
-    transition: all 0.15s;
-}
-
-.mem-field:hover {
-    filter: brightness(1.2);
-    transform: translateX(2px);
-}
-
-.mem-field-label {
-    font-weight: 600;
-}
-
-.mem-field-value {
-    font-weight: 400;
-    opacity: 0.8;
-    margin-left: 8px;
-}
-
-.mem-field-size {
-    font-size: 0.65rem;
-    opacity: 0.5;
-    margin-left: auto;
-    padding-left: 12px;
-}
-
-/* Freed/consumed fields */
-.mem-field-freed,
-.mem-field-consumed {
-    border-style: dashed;
-    opacity: 0.5;
-    text-decoration: line-through;
-}
-
-/* Arrow between stack and heap */
-.mem-diagram-arrow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #718096;
-    padding: 0 4px;
-    align-self: center;
-}
-
-/* Override svgbob container styling for memory diagrams */
-#content main div:has(svg.svgbob) + .mem-diagram-enhanced {
-    margin-top: -0.5em;
-}
-
-/* Hide original svgbob when enhanced version exists */
-div:has(+ .mem-diagram-enhanced) {
-    display: none !important;
-}
-
-/* Improve existing svgbob diagrams that aren't enhanced */
-#content main svg.svgbob {
-    max-width: 100%;
-    height: auto;
-    display: block;
-}
-
-/* All svgbob containers - original light theme from libr0Pure */
-#content main div:has(> svg.svgbob),
-#content main .svgbob-container,
-#content main div.svgbob {
-    background: #fff8f0;
-    border-left: 4px solid var(--rust-orange);
-    border-radius: 4px;
-    padding: 16px 20px;
-    margin: 1.5em 0;
-    overflow-x: auto;
-    position: relative;
-}
-
-/* Style svgbob text elements */
-#content main svg.svgbob text {
-    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace !important;
-    font-size: 12px !important;
-}
-
-/* Dark theme for bob code blocks that haven't been processed by svgbob */
-#content main pre:has(code.language-bob) {
-    background: #fff8f0 !important;
-    border-left: 4px solid var(--rust-orange);
-    border-radius: 4px;
-    padding: 16px 20px;
-    overflow-x: auto;
-}
-
-#content main pre:has(code.language-bob) code {
-    color: #1a1a1a !important;
-    background: none !important;
-    font-family: 'JetBrains Mono', 'SF Mono', monospace;
-    font-size: 0.82rem;
-    line-height: 1.4;
-}
-
-/* ========================================
-   INLINE MEMORY BLOCKS (for use in markdown)
-   ======================================== */
-
-/* Custom HTML blocks that can be used in markdown for professional diagrams */
 .mem-layout {
     display: flex;
     flex-direction: column;
@@ -951,7 +714,8 @@ div:has(+ .mem-diagram-enhanced) {
     background: #fff8f0;
     border-left: 4px solid var(--rust-orange);
     border-radius: 4px;
-    font-family: 'SF Mono', 'Monaco', 'JetBrains Mono', monospace;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    font-size: 0.9em;
 }
 
 .mem-layout-row {
@@ -963,7 +727,6 @@ div:has(+ .mem-diagram-enhanced) {
 
 .mem-layout-label {
     min-width: 120px;
-    font-size: 0.8rem;
     font-weight: 600;
     color: #1a1a1a;
 }
@@ -977,7 +740,7 @@ div:has(+ .mem-diagram-enhanced) {
 .mem-layout-block {
     padding: 5px 10px;
     border-radius: 3px;
-    font-size: 0.8em;
+    font-size: 0.85em;
     font-weight: 500;
     border: 1px solid;
     text-align: center;
@@ -999,15 +762,75 @@ div:has(+ .mem-diagram-enhanced) {
 }
 
 .mem-layout-heap-marker {
-    font-size: 0.6rem;
+    font-size: 0.75em;
     color: rgba(37, 99, 235, 0.6);
     font-style: italic;
     margin-left: 4px;
 }
 
 .mem-layout-note {
-    font-size: 0.7rem;
+    font-size: 0.8em;
     color: #6b7280;
     margin-top: 4px;
     font-style: italic;
+}
+
+/* ========================================
+   PROFESSIONAL CHECK/CROSS ICONS
+   ======================================== */
+
+.icon-check,
+.icon-cross {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+
+.icon-check {
+    background: rgba(22, 163, 74, 0.1);
+    border: 1.5px solid rgba(22, 163, 74, 0.4);
+    color: #15803d;
+}
+
+.icon-cross {
+    background: rgba(220, 38, 38, 0.08);
+    border: 1.5px solid rgba(220, 38, 38, 0.35);
+    color: #dc2626;
+}
+
+.icon-check svg,
+.icon-cross svg {
+    width: 10px;
+    height: 10px;
+}
+
+pre .icon-check,
+pre .icon-cross,
+code .icon-check,
+code .icon-cross {
+    width: 14px;
+    height: 14px;
+    margin-right: 2px;
+}
+
+pre .icon-check svg,
+pre .icon-cross svg,
+code .icon-check svg,
+code .icon-cross svg {
+    width: 8px;
+    height: 8px;
+}
+
+td .icon-check,
+td .icon-cross,
+th .icon-check,
+th .icon-cross {
+    width: 16px;
+    height: 16px;
 }
