@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find . -name \"*.rs\" -exec wc -l {} +)",
+      "Bash(find . -name \"*.md\" -exec grep -c \"^#\" {} +)",
+      "mcp__web-reader__webReader",
+      "Bash(rustc --version)",
+      "Bash(cargo --version)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(bob\" \"C:/Users/nurul/Repositories/Github/libr0/docs/appendix-closures.md\" | wc -l)",
+      "Bash(grep -n \"```bob\" \"C:/Users/nurul/Repositories/Github/libr0/docs/appendix-closures.md\" | wc -l)",
+      "Bash(bob\" \"C:/Users/nurul/Repositories/Github/libr0/docs/appendix-closures.md\")",
+      "Bash(grep -c \"```bob\" \"C:/Users/nurul/Repositories/Github/libr0/docs/appendix-closures.md\")",
+      "Bash(mdbook --version)",
+      "Bash(cargo install:*)",
+      "Bash(where mdbook:*)",
+      "Bash(where cargo:*)",
+      "Bash(where rustup:*)",
+      "Bash(curl -s https://nhadi.github.io/libr0/theme/custom.css)",
+      "Bash(curl -s https://nhadi.github.io/libr0/docs/appendix-closures.html)",
+      "Bash(grep -rn '```bob' docs/)",
+      "WebSearch",
+      "Bash(./build.sh:*)"
+    ]
+  }
+}
