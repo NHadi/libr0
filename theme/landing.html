@@ -46,16 +46,157 @@
             </div>
         </section>
 
-        <!-- Type Signature Preview (cheats.rs style) -->
+        <!-- Memory Layout Visualization (cheats.rs style) -->
         <section class="content-section">
-            <div class="type-preview">
-                <span class="comment">// What you'll build:</span><br>
-                <span class="keyword">pub enum</span> <span class="type-name">Option</span>&lt;T&gt; { <span class="rust-orange">Some</span>(T), <span class="rust-orange">None</span> }<br>
-                <span class="keyword">pub enum</span> <span class="type-name">Result</span>&lt;T, E&gt; { <span class="rust-orange">Ok</span>(T), <span class="rust-orange">Err</span>(E) }<br>
-                <span class="keyword">pub struct</span> <span class="type-name">Box</span>&lt;T&gt; { ptr: <span class="trait-name">NonNull</span>&lt;T&gt; }<br>
-                <span class="keyword">pub struct</span> <span class="type-name">Vec</span>&lt;T&gt; { ptr: <span class="trait-name">NonNull</span>&lt;T&gt;, len: <span class="type-name">usize</span>, cap: <span class="type-name">usize</span> }<br>
-                <span class="keyword">pub struct</span> <span class="type-name">Rc</span>&lt;T&gt; { ptr: <span class="trait-name">NonNull</span>&lt;<span class="type-name">RcInner</span>&lt;T&gt;&gt; }<br>
-                <span class="keyword">pub struct</span> <span class="type-name">RefCell</span>&lt;T&gt; { borrow: <span class="type-name">Cell</span>&lt;<span class="type-name">isize</span>&gt;, value: <span class="type-name">UnsafeCell</span>&lt;T&gt; }
+            <h2>
+                <img src="theme/libr0-logo.svg" alt="" class="section-logo">
+                Memory Layout
+            </h2>
+            <p class="section-intro">What you'll build from scratch. Each block represents actual memory on stack or heap.</p>
+
+            <div class="memory-layout-container">
+                <!-- Option<T> -->
+                <div class="mem-type-row">
+                    <div class="mem-type-label">
+                        <code>Option&lt;T&gt;</code>
+                        <a href="docs/01-option.html" class="mem-link">ch.01</a>
+                    </div>
+                    <div class="mem-blocks">
+                        <div class="mem-block tag">Tag</div>
+                        <div class="mem-block value-t">T</div>
+                    </div>
+                    <div class="mem-note">
+                        <span class="mem-or">or</span>
+                        <div class="mem-blocks">
+                            <div class="mem-block tag">Tag</div>
+                            <div class="mem-block empty">&#x2205;</div>
+                        </div>
+                    </div>
+                    <div class="mem-desc">Tag may be optimized away for <code>NonNull</code>, <code>NonZero</code>.</div>
+                </div>
+
+                <!-- Result<T, E> -->
+                <div class="mem-type-row">
+                    <div class="mem-type-label">
+                        <code>Result&lt;T, E&gt;</code>
+                        <a href="docs/02-result.html" class="mem-link">ch.02</a>
+                    </div>
+                    <div class="mem-blocks">
+                        <div class="mem-block tag">Tag</div>
+                        <div class="mem-block value-t">T</div>
+                    </div>
+                    <div class="mem-note">
+                        <span class="mem-or">or</span>
+                        <div class="mem-blocks">
+                            <div class="mem-block tag">Tag</div>
+                            <div class="mem-block value-e">E</div>
+                        </div>
+                    </div>
+                    <div class="mem-desc">Either some value <code>T</code> or error <code>E</code>.</div>
+                </div>
+
+                <!-- Box<T> -->
+                <div class="mem-type-row">
+                    <div class="mem-type-label">
+                        <code>Box&lt;T&gt;</code>
+                        <a href="docs/03-box.html" class="mem-link">ch.03</a>
+                    </div>
+                    <div class="mem-blocks">
+                        <div class="mem-block ptr">ptr<sub>8</sub></div>
+                    </div>
+                    <div class="mem-arrow">&#x2192;</div>
+                    <div class="mem-blocks heap">
+                        <div class="mem-block value-t wide">&#x2190; T &#x2192;</div>
+                    </div>
+                    <div class="mem-heap-label">(heap)</div>
+                    <div class="mem-desc">Stack proxy to heap-allocated <code>T</code>. Owns the data.</div>
+                </div>
+
+                <!-- Vec<T> -->
+                <div class="mem-type-row">
+                    <div class="mem-type-label">
+                        <code>Vec&lt;T&gt;</code>
+                        <a href="docs/04-vec.html" class="mem-link">ch.04</a>
+                    </div>
+                    <div class="mem-blocks">
+                        <div class="mem-block ptr">ptr<sub>8</sub></div>
+                        <div class="mem-block len">len<sub>8</sub></div>
+                        <div class="mem-block cap">cap<sub>8</sub></div>
+                    </div>
+                    <div class="mem-arrow">&#x2192;</div>
+                    <div class="mem-blocks heap">
+                        <div class="mem-block value-t">T</div>
+                        <div class="mem-block value-t">T</div>
+                        <div class="mem-block value-t dim">T</div>
+                        <div class="mem-block empty dim">&#x22EF;</div>
+                    </div>
+                    <div class="mem-heap-label">(heap)</div>
+                    <div class="mem-desc">Growable array. <code>len</code> &#x2264; <code>capacity</code>.</div>
+                </div>
+
+                <!-- Cell<T> -->
+                <div class="mem-type-row">
+                    <div class="mem-type-label">
+                        <code>Cell&lt;T&gt;</code>
+                        <a href="docs/05-cell.html" class="mem-link">ch.05</a>
+                    </div>
+                    <div class="mem-blocks">
+                        <div class="mem-block unsafe-cell wide">&#x2190; UnsafeCell&lt;T&gt; &#x2192;</div>
+                    </div>
+                    <div class="mem-desc">Interior mutability via move-in/move-out. <code>!Sync</code>.</div>
+                </div>
+
+                <!-- RefCell<T> -->
+                <div class="mem-type-row">
+                    <div class="mem-type-label">
+                        <code>RefCell&lt;T&gt;</code>
+                        <a href="docs/06-refcell.html" class="mem-link">ch.06</a>
+                    </div>
+                    <div class="mem-blocks">
+                        <div class="mem-block borrow">borrow<sub>8</sub></div>
+                        <div class="mem-block unsafe-cell wide">&#x2190; UnsafeCell&lt;T&gt; &#x2192;</div>
+                    </div>
+                    <div class="mem-desc">Runtime borrow checking. Counter tracks <code>&amp;</code> vs <code>&amp;mut</code>.</div>
+                </div>
+
+                <!-- Rc<T> -->
+                <div class="mem-type-row">
+                    <div class="mem-type-label">
+                        <code>Rc&lt;T&gt;</code>
+                        <a href="docs/07-rc.html" class="mem-link">ch.07</a>
+                    </div>
+                    <div class="mem-blocks">
+                        <div class="mem-block ptr">ptr<sub>8</sub></div>
+                    </div>
+                    <div class="mem-arrow">&#x2192;</div>
+                    <div class="mem-blocks heap">
+                        <div class="mem-block strong">strong<sub>8</sub></div>
+                        <div class="mem-block weak">weak<sub>8</sub></div>
+                        <div class="mem-block value-t wide">&#x2190; T &#x2192;</div>
+                    </div>
+                    <div class="mem-heap-label">(heap)</div>
+                    <div class="mem-desc">Shared ownership via reference counting.</div>
+                </div>
+
+                <!-- Rc<RefCell<T>> -->
+                <div class="mem-type-row">
+                    <div class="mem-type-label">
+                        <code>Rc&lt;RefCell&lt;T&gt;&gt;</code>
+                        <a href="docs/08-rc-refcell.html" class="mem-link">ch.08</a>
+                    </div>
+                    <div class="mem-blocks">
+                        <div class="mem-block ptr">ptr<sub>8</sub></div>
+                    </div>
+                    <div class="mem-arrow">&#x2192;</div>
+                    <div class="mem-blocks heap">
+                        <div class="mem-block strong">strong<sub>8</sub></div>
+                        <div class="mem-block weak">weak<sub>8</sub></div>
+                        <div class="mem-block borrow">borrow<sub>8</sub></div>
+                        <div class="mem-block value-t wide">&#x2190; T &#x2192;</div>
+                    </div>
+                    <div class="mem-heap-label">(heap)</div>
+                    <div class="mem-desc">Shared + mutable. The full pattern.</div>
+                </div>
             </div>
         </section>
 
