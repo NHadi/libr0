@@ -56,33 +56,57 @@ Now let's see where each piece of data lives in memory.
 
 When your Rust program runs, the operating system gives it a contiguous chunk of virtual memory organized into distinct regions:
 
-```bob
-High Memory Addresses "(0x0000_7FFF_FFFF_FFFF - User Space upper bound)"
-+---------------------------------------------+
-|              STACK                          |  <- Grows downward
-|  "(Function frames, local variables)"       |
-+---------------------------------------------+
-|                   ↓                         |
-|                                             |
-|              "(unused space)"               |
-|                                             |
-|                   ↑                         |
-+---------------------------------------------+
-|              HEAP                           |  <- Grows upward
-|  "(Dynamically allocated: Box, Vec, String)"|
-+---------------------------------------------+
-|     DATA SEGMENT "(Read + Write)"           |
-|  ".bss section: uninitialized data"         |
-|  ".data section: initialized mutable data"  |
-+---------------------------------------------+
-|     RODATA SEGMENT "(Read-Only)"            |
-|  "(static, const, string literals)"         |
-+---------------------------------------------+
-|     TEXT SEGMENT "(Read + Execute)"         |
-|  "(Your compiled functions)"                |
-+---------------------------------------------+
-Low Memory Addresses "(0x0000_0000_0000_0000)"
-```
+<div class="mem-layout">
+  <div class="mem-layout-note">High Memory Addresses (0x0000_7FFF_FFFF_FFFF - User Space upper bound)</div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">STACK</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block tag">STACK</span>
+      <span class="mem-layout-block val">Function frames, local variables</span>
+    </div>
+    <span class="mem-layout-note">&larr; Grows downward</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label"></span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block freed">&darr; unused space &uarr;</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">HEAP</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block tag">HEAP</span>
+      <span class="mem-layout-block ptr">Dynamically allocated: Box, Vec, String</span>
+    </div>
+    <span class="mem-layout-note">&larr; Grows upward</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">DATA</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block tag">DATA SEGMENT</span>
+      <span class="mem-layout-block data">.bss: uninitialized</span>
+      <span class="mem-layout-block data">.data: initialized mutable</span>
+    </div>
+    <span class="mem-layout-note">Read + Write</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">RODATA</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block tag">RODATA SEGMENT</span>
+      <span class="mem-layout-block len">static, const, string literals</span>
+    </div>
+    <span class="mem-layout-note">Read-Only</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">TEXT</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block tag">TEXT SEGMENT</span>
+      <span class="mem-layout-block val">Your compiled functions</span>
+    </div>
+    <span class="mem-layout-note">Read + Execute</span>
+  </div>
+  <div class="mem-layout-note">Low Memory Addresses (0x0000_0000_0000_0000)</div>
+</div>
 
 **Key Insight:** The stack and heap grow toward each other!
 
@@ -94,109 +118,198 @@ Now let's see exactly where each piece of data from our example lives.
 
 Before `main()` even runs, the OS loads static data into the DATA segment:
 
-```bob
-High Memory Addresses "(0x0000_7FFF_FFFF_FFFF)"
-+-------------------------------------------+
-|                   STACK                   |   .------------------------------.
-|              "(empty at start)"           |   | Note that segments           |
-+-------------------------------------------+   : consist of multiple sections |
-|             "(unused space)"              |   '------------------------------'
-+-------------------------------------------+
-|                   HEAP                    |
-|              "(empty at start)"           |
-+-------------------------------------------+
-|    DATA SEGMENT "(Read + Write)"          |
-|                                           |  .----------------------------------------.
-|  ".bss section (Uninitialized Data):"     |  |"static GLOBAL_S: &str = 'Global';"     |
-|                                           |  |"static mut GLOBAL_N: u32 = 10;"        |
-|  "BUFFER [u8; 10_000] (10KB, all zeros)"  |  |"static mut BUFFER = [0; 10_000];"      |
-|  +---+---+---+-------+---+---+            |  |                                        |
-|  | 0 | 0 | 0 |...... | 0 | 0 |            |  |"fn main() {"                           |
-|  +---+---+---+-------+---+---+            |  |"    let x = 42;"                       |
-|                                           |  |"    let y = 100;"                      |
-|  ".data section (Initialized Mutable):"   |  |"    let s = String::from('Local');"    |
-|                                           |  |"    let v = vec![1, 2, 3, 4, 5];"      |
-|  "GLOBAL_N: u32 = 10"                     |  |"    let arr = [10, 20, 30, 40, 50];"   |
-|                                           |  :"    let doubled = process_data(x, &s);"|
-+-------------------------------------------+  |     ...                                |
-|    RODATA SEGMENT "(Read-Only)"           |  |"}"                                     |
-|                                           |  |                                        |
-| .rodata section "(static variables)"      |  |"fn process_data("                      |
-|                                           |  |"   param_num: i32,"                    |
-|  +-----------+                            |  |"   param_text: &string"                |
-|  | "len:" 5  | GLOBAL "&str"              |  |" ) -> i32 {"                           |
-|  | "ptr:" *--+--+                         |  |"    let result = param_num * 2;"       |
-|  +-----------+  |                         |  |     ...                                |
-|                 |                         |  |     result                             |
-| .rodata section |"(string literals)"      |  |"}"                                     |
-|               +-v-+---+---+---+---+---+   |  '----------------------------------------'
-|               | G | l | o | b | a | l |   |
-|               +---+---+---+---+---+---+   |
-|               | L | o | c | a | l |       |
-|               +---+---+---+---+---+       |
-|                                           |
-+-------------------------------------------+
-|              TEXT "(Code)"                |
-|                                           |
-|             "(User's code)"               |
-|  "fn main()" { ... }                      |
-|  "fn process_data ()" { ... }             |
-|                                           |
-|    "(Rust standard library functions)"    |
-|  "fn println!()" code                     |
-|  "fn std::alloc::alloc()"                 |
-|  "fn Vec::push()"                         |
-|                                           |
-+--------------------------------------------+
-Low Memory Addresses "(0x0000_0000_0000_0000)"
-```
+<div class="mem-layout">
+  <div class="mem-layout-note">High Memory Addresses (0x0000_7FFF_FFFF_FFFF)</div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">STACK</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block freed">(empty at start)</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label"></span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block freed">(unused space)</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">HEAP</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block freed">(empty at start)</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">.bss section</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block tag">DATA SEGMENT</span>
+      <span class="mem-layout-block data">BUFFER [u8; 10_000]</span>
+      <span class="mem-layout-block val">0</span>
+      <span class="mem-layout-block val">0</span>
+      <span class="mem-layout-block val">0</span>
+      <span class="mem-layout-block freed">...</span>
+      <span class="mem-layout-block val">0</span>
+    </div>
+    <span class="mem-layout-note">10KB, all zeros</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">.data section</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">GLOBAL_N: u32</span>
+      <span class="mem-layout-block val">10</span>
+    </div>
+    <span class="mem-layout-note">Initialized Mutable</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">.rodata (statics)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block tag">RODATA</span>
+      <span class="mem-layout-block len">GLOBAL_S: &amp;str</span>
+      <span class="mem-layout-block len">len: 6</span>
+      <span class="mem-layout-block ptr">ptr &rarr;</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">.rodata (literals)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">G</span>
+      <span class="mem-layout-block data">l</span>
+      <span class="mem-layout-block data">o</span>
+      <span class="mem-layout-block data">b</span>
+      <span class="mem-layout-block data">a</span>
+      <span class="mem-layout-block data">l</span>
+    </div>
+    <span class="mem-layout-arrow">&larr;</span>
+    <span class="mem-layout-note">GLOBAL_S.ptr points here</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px"></span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">L</span>
+      <span class="mem-layout-block data">o</span>
+      <span class="mem-layout-block data">c</span>
+      <span class="mem-layout-block data">a</span>
+      <span class="mem-layout-block data">l</span>
+    </div>
+    <span class="mem-layout-note">"Local" literal (used later by String::from)</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">TEXT (Code)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block tag">TEXT</span>
+      <span class="mem-layout-block val">fn main() { ... }</span>
+      <span class="mem-layout-block val">fn process_data() { ... }</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px"></span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">fn println!()</span>
+      <span class="mem-layout-block val">fn std::alloc::alloc()</span>
+      <span class="mem-layout-block val">fn Vec::push()</span>
+    </div>
+    <span class="mem-layout-note">Rust standard library</span>
+  </div>
+  <div class="mem-layout-note">Low Memory Addresses (0x0000_0000_0000_0000)</div>
+</div>
 
 ### Step 2: main() Executes - Local Variables on Stack
 
 When `main()` is called, the function's **prologue** (compiler-generated instructions at the beginning of the function) creates a stack frame by adjusting the stack pointer (typically `sub rsp, N` where N is the size needed for local variables). After all local variables are initialized (right before calling `process_data(x, &s)`), the stack looks like this:
 
-```bob
-  STACK
-+------------------------+
-|  main's frame          |<-- "0x7FFF_FFFF_FFF0 (high address)"
-|                        |  .--------------------------~------------.
-|  +---------------------+  |"; Function prologue (assembly)"       +----.
-|  |Return address       |  |"push rbp        ; Save old base ptr"  :    |
-|  +---------------------+  :"mov rbp, rsp    ; Set new base ptr"   |    |
-|  |rbp                  |  |"sub rsp, 128    ; Allocate locals"    |    |
-|  +---------------------+  '--------------------------~------------'    |
-|  |"x: i32 = 42"        |                                               |
-|  +---------------------+   .-----------------------------------------. |
-|  |"y: i32 = 100"       |   |"static GLOBAL_S: &str = 'Global';"      | |
-|  +---------------------+   |"static mut GLOBAL_N: u32 = 10;"         | |
-|  |"doubled: i32 = ?"   |   |"static mut BUFFER = [0; 10_000];"       | |
-|  +---------------------+   |                                         | |
-|  |  "arr: [i32; 5]"    |   |"fn main() {"                            | |
-|  +---+---+---+---+---+ |   |"    // function prologue" <-------------+-+
-|  |10 |20 |30 |40 |50 | |   |"    let x = 42;"                        |
-|  +---+---+---+---+---+-+   |"    let y = 100;"                       |
-|  |"s: String"          |   |"    let s = String::from('Local');"     |
-|  |  "len:"  5          |   |"    let v = vec![1, 2, 3, 4, 5];"       |
-|  |  "cap:"  5          |   |"    let arr = [10, 20, 30, 40, 50];"    |
-|  |  "ptr:"  *----------+-. :"    let doubled = process_data(x, &s);" |
-|  +---------------------+ | |     ...                                 |
-|  | "v: Vec<i32>"       | | |"}"                                      |
-|  |   "len:"  5         | | '-----------------------------------------'
-|  |   "cap:"  5         | |
-|  |   "ptr:"  *         | |
-+--+-----------|---------+<++- "RSP points here after prologue (allocated for locals)"
-               |           |
-  .------------'           |
-  |                        |
-  |   HEAP                 |
-+-+------------------------|-------------------+
-| |                        v                   |
-| |   +--+--+--+--+--+   +---+---+---+---+---+ |
-| '-->|1 |2 |3 |4 |5 |   | L | o | c | a | l | |
-|     +--+--+--+--+--+   +---+---+---+---+---+ |
-|                                              |
-+----------------------------------------------+
-```
+<div class="mem-layout">
+  <div class="mem-layout-note">main's stack frame — 0x7FFF_FFFF_FFF0 (high address)</div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">Return address</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ret addr</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">Saved RBP</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">rbp</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">x: i32</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">42</span>
+    </div>
+    <span class="mem-layout-note">4 bytes</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">y: i32</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">100</span>
+    </div>
+    <span class="mem-layout-note">4 bytes</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">doubled: i32</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block freed">?</span>
+    </div>
+    <span class="mem-layout-note">4 bytes (uninitialized)</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">arr: [i32; 5]</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">10</span>
+      <span class="mem-layout-block val">20</span>
+      <span class="mem-layout-block val">30</span>
+      <span class="mem-layout-block val">40</span>
+      <span class="mem-layout-block val">50</span>
+    </div>
+    <span class="mem-layout-note">20 bytes, entirely on stack</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">s: String</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr →</span>
+      <span class="mem-layout-block len">len: 5</span>
+      <span class="mem-layout-block cap">cap: 5</span>
+    </div>
+    <span class="mem-layout-note">24 bytes on stack</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">v: Vec&lt;i32&gt;</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr →</span>
+      <span class="mem-layout-block len">len: 5</span>
+      <span class="mem-layout-block cap">cap: 5</span>
+    </div>
+    <span class="mem-layout-note">24 bytes on stack</span>
+  </div>
+  <div class="mem-layout-note">↑ RSP points here after prologue</div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label"></span>
+    <div class="mem-layout-blocks">
+    </div>
+  </div>
+  <div class="mem-layout-note">HEAP</div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">v.ptr →</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">1</span>
+      <span class="mem-layout-block val">2</span>
+      <span class="mem-layout-block val">3</span>
+      <span class="mem-layout-block val">4</span>
+      <span class="mem-layout-block val">5</span>
+    </div>
+    <span class="mem-layout-heap-marker">(heap)</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">s.ptr →</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">L</span>
+      <span class="mem-layout-block data">o</span>
+      <span class="mem-layout-block data">c</span>
+      <span class="mem-layout-block data">a</span>
+      <span class="mem-layout-block data">l</span>
+    </div>
+    <span class="mem-layout-heap-marker">(heap)</span>
+  </div>
+</div>
 
 **Important observations:**
 
@@ -222,63 +335,155 @@ When we call `process_data(x, &s)`, here's what the CPU actually does (x86-64 ca
    - Allocates space for local variables
    - May spill register arguments to stack (compiler's choice)
 
-```bob
-  CPU REGISTERS "(not in memory!)"
-+------------------------------+
-|  "RBP:  0x7FFF_FFFF_FF00"    |
-|  "RSP:  0x7FFF_FFFF_FE00"    |
-|  "EDI:  42 (param_num)"      |
-|  "RSI:  param_text" *--------+-+
-+------------------------------+ |
-                                 |   .-----------------------------------------.
-  STACK                          |   |"; Function prologue (assembly)"         +---.
-+-----------------------------+  |   |"push rbp         ; Save caller's RBP"   :   |
-| "main()'s frame"            |  |   :"mov rbp, rsp     ; Set our RBP"         |   |
-|  +--------------------------+  |   |"sub rsp, 16      ; Allocate locals"     |   |
-|  | Return address to OS     |  |   '-----------------------------------------'   |
-|  +--------------------------+  |   .------------------------------------------.  |
-|  | Saved main's RBP         |  |   |"fn process_data("                        |  |
-|  +--------------------------+  |   |"    param_num: i32,"                     |  |
-|  | "x: i32 = 42"            |  |   |"    param_text: &String"                 |  |
-|  +--------------------------+  |   |") -> i32 {"                              |  |
-|  | "y: i32 = 100"           |  |   |"    // function prologue" <--------------+--'
-|  +--------------------------+  |   |"    let result = param_num * 2;"         |
-|  | "doubled: i32 = ???"     |  |   |"    println!(...)"                       |
-|  +--------------------------+  |   |"    result  // Returns 84"               |
-|  | "arr:" [i32; 5]          |  |   |"}"                                       |
-|  +---+---+---+---+---+      |  |   '------------------------------------------'
-|  |10 |20 |30 |40 |50 |      |  |
-|  +---+---+---+---+---+------+  |
-|  | "s: String"              |<-+   "&s points here (param_text)"
-|  |   "len:"  5              |
-|  |   "cap:"  5              |
-|  |   "ptr:"  *--------------+-------------------------------------------+
-|  +--------------------------+                                           |
-|  | "v: Vec<i32>"            |                                           |
-|  |   "ptr:"  *--------------+--+                                        |
-|  |   "len:"  5              |  |                                        |
-|  |   "cap:"  5              |  |                                        |
-+--+--------------------------+  |                                        |
-|  "process_data()' s frame"  |  |                                        |
-|  +--------------------------+  |                                        |
-|  | Return address to main   |  |                                        |
-|  +--------------------------+  |                                        |
-|  | "Saved RBP = 0x7F.."     +<-|---"push rbp stored this"               |
-|  +--------------------------+  |                                        |
-|  | "result: i32 = 84"       |  |                                        |
-+--+--------------------------+<-|---"RSP points here (after prologue)"   |
-       +-------------------------+                                        |
-       |                   +----------------------------------------------+
-       |                   |
-  HEAP |                   |
-+------+-------------------+-------------------+
-|      v                   v                   |
-|     +--+--+--+--+--+   +---+---+---+---+---+ |
-|     |1 |2 |3 |4 |5 |   | L | o | c | a | l | |
-|     +--+--+--+--+--+   +---+---+---+---+---+ |
-|                                              |
-+----------------------------------------------+
-```
+<div class="mem-layout">
+  <div class="mem-layout-note">CPU REGISTERS (not in memory!)</div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">RBP</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">0x7FFF_FFFF_FF00</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">RSP</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">0x7FFF_FFFF_FE00</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">EDI</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">42 (param_num)</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">RSI</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">param_text → &amp;s on stack</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label"></span>
+    <div class="mem-layout-blocks">
+    </div>
+  </div>
+  <div class="mem-layout-note">STACK</div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">main()'s frame</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block tag">main</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">  Return address</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ret addr to OS</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">  Saved RBP</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">main's RBP</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">  x: i32</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">42</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">  y: i32</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">100</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">  doubled: i32</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block freed">???</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">  arr: [i32; 5]</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">10</span>
+      <span class="mem-layout-block val">20</span>
+      <span class="mem-layout-block val">30</span>
+      <span class="mem-layout-block val">40</span>
+      <span class="mem-layout-block val">50</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">  s: String</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr →</span>
+      <span class="mem-layout-block len">len: 5</span>
+      <span class="mem-layout-block cap">cap: 5</span>
+    </div>
+    <span class="mem-layout-note">&larr; RSI (param_text) points here</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">  v: Vec&lt;i32&gt;</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr →</span>
+      <span class="mem-layout-block len">len: 5</span>
+      <span class="mem-layout-block cap">cap: 5</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">process_data()</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block tag">process_data</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">  Return address</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ret addr to main</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">  Saved RBP</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">0x7F.. (push rbp)</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label" style="min-width:160px">  result: i32</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">84</span>
+    </div>
+  </div>
+  <div class="mem-layout-note">↑ RSP points here (after prologue)</div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label"></span>
+    <div class="mem-layout-blocks">
+    </div>
+  </div>
+  <div class="mem-layout-note">HEAP</div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">v.ptr →</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">1</span>
+      <span class="mem-layout-block val">2</span>
+      <span class="mem-layout-block val">3</span>
+      <span class="mem-layout-block val">4</span>
+      <span class="mem-layout-block val">5</span>
+    </div>
+    <span class="mem-layout-heap-marker">(heap)</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">s.ptr →</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">L</span>
+      <span class="mem-layout-block data">o</span>
+      <span class="mem-layout-block data">c</span>
+      <span class="mem-layout-block data">a</span>
+      <span class="mem-layout-block data">l</span>
+    </div>
+    <span class="mem-layout-heap-marker">(heap)</span>
+  </div>
+</div>
 
 Key observations about arguments and returns:\*\*
 
@@ -362,48 +567,94 @@ When `process_data()` returns, two things happen:
 1. **Return value is copied**: The value in `result` (84) is **copied** to `doubled` in main's frame (using CPU register or direct memory copy)
 2. **Stack frame is popped**: process_data's entire frame is destroyed
 
-```bob
-  STACK
-+------------------------+
-|  main's frame          |
-|                        |
-|  +---------------------+
-|  |Return address       |
-|  +---------------------+
-|  |rbp                  |
-|  +---------------------+
-|  |"x: i32 = 42"        |
-|  +---------------------+
-|  |"y: i32 = 100"       |
-|  +---------------------+
-|  |"doubled: i32 = 84"  | <- "Return value COPIED here (4 bytes)"
-|  +---------------------+
-|  |  "arr: [i32; 5]"    |
-|  +---+---+---+---+---+ |
-|  |10 |20 |30 |40 |50 | |
-|  +---+---+---+---+---+-+
-|  |"s: String"          |
-|  |  "len:"  5          |
-|  |  "cap:"  5          |
-|  |  "ptr:"  *----------+-.
-|  +---------------------+ |
-|  | "v: Vec<i32>"       | |
-|  |   "len:"  5         | |
-|  |   "cap:"  5         | |
-|  |   "ptr:"  *         | |
-+--+-----------|---------+ |
-               |           |
-  .------------'           |
-  |                        |
-  |   HEAP                 |
-+-+------------------------|-------------------+
-| |                        v                   |
-| |   +--+--+--+--+--+   +---+---+---+---+---+ |
-| '-->|1 |2 |3 |4 |5 |   | L | o | c | a | l | |
-|     +--+--+--+--+--+   +---+---+---+---+---+ |
-|                                              |
-+----------------------------------------------+
-```
+<div class="mem-layout">
+  <div class="mem-layout-note">STACK — main's frame (after process_data returns)</div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">Return address</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ret addr</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">Saved RBP</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">rbp</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">x: i32</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">42</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">y: i32</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">100</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">doubled: i32</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">84</span>
+    </div>
+    <span class="mem-layout-note">&larr; Return value COPIED here (4 bytes)</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">arr: [i32; 5]</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">10</span>
+      <span class="mem-layout-block val">20</span>
+      <span class="mem-layout-block val">30</span>
+      <span class="mem-layout-block val">40</span>
+      <span class="mem-layout-block val">50</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">s: String</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr →</span>
+      <span class="mem-layout-block len">len: 5</span>
+      <span class="mem-layout-block cap">cap: 5</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">v: Vec&lt;i32&gt;</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr →</span>
+      <span class="mem-layout-block len">len: 5</span>
+      <span class="mem-layout-block cap">cap: 5</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label"></span>
+    <div class="mem-layout-blocks">
+    </div>
+  </div>
+  <div class="mem-layout-note">HEAP (unchanged)</div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">v.ptr →</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">1</span>
+      <span class="mem-layout-block val">2</span>
+      <span class="mem-layout-block val">3</span>
+      <span class="mem-layout-block val">4</span>
+      <span class="mem-layout-block val">5</span>
+    </div>
+    <span class="mem-layout-heap-marker">(heap)</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">s.ptr →</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">L</span>
+      <span class="mem-layout-block data">o</span>
+      <span class="mem-layout-block data">c</span>
+      <span class="mem-layout-block data">a</span>
+      <span class="mem-layout-block data">l</span>
+    </div>
+    <span class="mem-layout-heap-marker">(heap)</span>
+  </div>
+</div>
 
 **Key observations about returns:**
 

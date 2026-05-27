@@ -59,36 +59,58 @@ struct Rc0<T> {
 
 **Wrong approach (count in each Rc):**
 
-```bob
-Stack                                    Heap
-+-------------+                         +---------+
-| rc1         |                         |  data   |
-| ptr *-------+------------------------>|         |
-| "count:"1   |   Each Rc has           +---------+
-+-------------+   its own count!             ^
-                  They can"'t"               |
-+-------------+   coordinate!                |
-| rc2         |                              |
-| ptr *-------+------------------------------+
-| "count:"1   |   ❌  WRONG
-+-------------+
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">rc1</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+      <span class="mem-layout-block freed">count: 1</span>
+    </div>
+    <span class="mem-layout-arrow">→</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">data</span>
+    </div>
+    <span class="mem-layout-heap-marker">(heap)</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">rc2</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+      <span class="mem-layout-block freed">count: 1</span>
+    </div>
+    <span class="mem-layout-arrow">→</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">data</span>
+    </div>
+    <span class="mem-layout-heap-marker">(heap) same allocation!</span>
+  </div>
+  <div class="mem-layout-note">❌ WRONG — counts can't coordinate. Each Rc has its own count, leading to double free!</div>
+</div>
 
 **Correct approach (count with data):**
 
-```bob
-Stack                                    Heap
-+-------------+                         +--------------+
-| rc1         |                         | "count:"2    | <- Shared count!
-| ptr *-------+------------------------>| data         |
-+-------------+                         +--------------+
-                                               ^
-+-------------+                                |
-| rc2         |                                |
-| ptr *-------+--------------------------------+
-+-------------+   Both point to the SAME count
-                  ✅  CORRECT
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">rc1</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+    </div>
+    <span class="mem-layout-arrow">→</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block len">count: 2</span>
+      <span class="mem-layout-block data">data</span>
+    </div>
+    <span class="mem-layout-heap-marker">(heap)</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">rc2</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+    </div>
+    <span class="mem-layout-arrow">↗ same heap block</span>
+  </div>
+  <div class="mem-layout-note">✅ CORRECT — shared count. Both Rc instances point to the same RcInner with a single count.</div>
+</div>
 
 **In code:**
 

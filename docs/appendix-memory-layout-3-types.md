@@ -10,11 +10,16 @@ let y: bool = true;
 let z: f64 = 3.14;
 ```
 
-```bob
-+--------+----------+----------+
-|"42(4B)"|"true(1B)"|"3.14(8B)"|
-+--------+----------+----------+
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">Tuple (stack)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">42 (4B)</span>
+      <span class="mem-layout-block val">true (1B)</span>
+      <span class="mem-layout-block val">3.14 (8B)</span>
+    </div>
+  </div>
+</div>
 
 ### Arrays (Fixed Size)
 
@@ -22,12 +27,19 @@ let z: f64 = 3.14;
 let arr: [i32; 5] = [1, 2, 3, 4, 5];
 ```
 
-```bob
-+---+---+---+---+---+
-| 1 | 2 | 3 | 4 | 5 | Each element has 4 bytes
-+---+---+---+---+---+
-
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">arr (stack)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">1</span>
+      <span class="mem-layout-block data">2</span>
+      <span class="mem-layout-block data">3</span>
+      <span class="mem-layout-block data">4</span>
+      <span class="mem-layout-block data">5</span>
+    </div>
+  </div>
+  <span class="mem-layout-note">Each element is 4 bytes &mdash; total 20 bytes on stack</span>
+</div>
 
 ### Vec
 
@@ -35,16 +47,26 @@ let arr: [i32; 5] = [1, 2, 3, 4, 5];
 let v = vec![1, 2, 3];
 ```
 
-```bob
-     STACK                   HEAP
-+-------------+
-|"v: Vec<i32>"|      +---+---+---+---+---+
-|   "ptr:" *--+----->| 1 | 2 | 3 |   |   |
-|   "len:" 3  |      +---+---+---+---+---+
-|   "cap:" 5  |          20 bytes
-+-------------+
-    24 bytes
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">v (stack, 24B)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+      <span class="mem-layout-block len">len: 3</span>
+      <span class="mem-layout-block cap">cap: 5</span>
+    </div>
+    <span class="mem-layout-arrow">&rarr;</span>
+    <span class="mem-layout-heap-marker">(heap)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">1</span>
+      <span class="mem-layout-block data">2</span>
+      <span class="mem-layout-block data">3</span>
+      <span class="mem-layout-block freed">_</span>
+      <span class="mem-layout-block freed">_</span>
+    </div>
+  </div>
+  <span class="mem-layout-note">Stack: 24 bytes (3 &times; 8) &mdash; Heap: 20 bytes (5 &times; 4)</span>
+</div>
 
 Notice that `ptr`, `len`, and `cap` are all `usize`-sized — that's 8 bytes each
 on a 64-bit system, giving us 3 × 8 = **24 bytes** on the stack.
@@ -78,16 +100,26 @@ Remember, a `String` is basically a `Vec` of `u8`.
 let s = String::from("café");
 ```
 
-```bob
-   STACK                          HEAP
-+-----------+
-|"s: String"|      +----+----+----+----+----+
-|  "ptr:"*--+----->| 63 | 61 | 66 | C3 | A9 |
-|  "len:"5  |      +----+----+----+----+----+
-|  "cap:"5  |        c    a    f   "é (2 bytes)"
-+-----------+
-    24 bytes           "5 bytes, but only 4 chars!"
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">s (stack, 24B)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+      <span class="mem-layout-block len">len: 5</span>
+      <span class="mem-layout-block cap">cap: 5</span>
+    </div>
+    <span class="mem-layout-arrow">&rarr;</span>
+    <span class="mem-layout-heap-marker">(heap)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">63 &lsquo;c&rsquo;</span>
+      <span class="mem-layout-block data">61 &lsquo;a&rsquo;</span>
+      <span class="mem-layout-block data">66 &lsquo;f&rsquo;</span>
+      <span class="mem-layout-block data">C3</span>
+      <span class="mem-layout-block data">A9</span>
+    </div>
+  </div>
+  <span class="mem-layout-note">UTF-8: &lsquo;&eacute;&rsquo; = 2 bytes (C3 A9) &mdash; 5 bytes total, but only 4 chars!</span>
+</div>
 
 `String` stores UTF-8 encoded bytes, not characters. The `é` character needs
 2 bytes (`0xC3 0xA9`), so `s.len() == 5` (bytes) while `s.chars().count() == 4`
@@ -99,15 +131,25 @@ let s = String::from("café");
 let s = "café";
 ```
 
-```bob
-    STACK                     DATA segment
-+------------+
-| "s: &str"  |           +----+----+----+----+----+
-|  "ptr:" *--+---------->| 63 | 61 | 66 | C3 | A9 |
-|  "len:" 5  |           +----+----+----+----+----+
-+------------+             c    a    f   "é (2 bytes)"
-   16 bytes
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">s (stack, 16B)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+      <span class="mem-layout-block len">len: 5</span>
+    </div>
+    <span class="mem-layout-arrow">&rarr;</span>
+    <span class="mem-layout-heap-marker">(DATA segment)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">63 &lsquo;c&rsquo;</span>
+      <span class="mem-layout-block data">61 &lsquo;a&rsquo;</span>
+      <span class="mem-layout-block data">66 &lsquo;f&rsquo;</span>
+      <span class="mem-layout-block data">C3</span>
+      <span class="mem-layout-block data">A9</span>
+    </div>
+  </div>
+  <span class="mem-layout-note">Fat pointer (ptr + len, no cap) &mdash; read-only view into binary</span>
+</div>
 
 A `&str` is a **fat pointer**: just a pointer and a length, no capacity. It's a
 read-only view into bytes that already exist somewhere — in this case, the DATA
@@ -126,15 +168,20 @@ segment baked into the binary at compile time.
 let b = Box::new(42);
 ```
 
-```bob
-    STACK               HEAP
-+---------------+
-| "b: Box<i32>" |       +----+
-|   "ptr:" *----+------>| 42 |
-+---------------+       +----+
-    8 bytes              4 bytes
-
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">b (stack, 8B)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+    </div>
+    <span class="mem-layout-arrow">&rarr;</span>
+    <span class="mem-layout-heap-marker">(heap)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">42 (4B)</span>
+    </div>
+  </div>
+  <span class="mem-layout-note">Stack: 8 bytes (pointer only) &mdash; Heap: 4 bytes (i32)</span>
+</div>
 
 ### Nested Types
 
@@ -145,20 +192,53 @@ let v: Vec<String> = vec![
 ];
 ```
 
-```bob
-STACK                                    HEAP
-+-------------------+            +-------------+
-| "v: Vec<String>"  |            | "s: String" |      +---+---+---+---+---+
-|   "ptr:" *--------+----------->|   "ptr:" *--+----->| h | e | l | l | o |
-|   "len:" 2        |            |   "len:" 5  |      +---+---+---+---+---+
-|   "cap:" 2        |            |   "cap:" 5  |
-+-------------------+            +-------------+
-                                 | "s: String" |      +---+---+---+---+---+
-                                 |   "ptr:" *--+----->| w | o | r | l | d |
-                                 |   "len:" 5  |      +---+---+---+---+---+
-                                 |   "cap:" 5  |
-                                 +-------------+
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">v (stack, 24B)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+      <span class="mem-layout-block len">len: 2</span>
+      <span class="mem-layout-block cap">cap: 2</span>
+    </div>
+    <span class="mem-layout-arrow">&rarr;</span>
+    <span class="mem-layout-heap-marker">(heap)</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">&nbsp;&nbsp;String[0]</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+      <span class="mem-layout-block len">len: 5</span>
+      <span class="mem-layout-block cap">cap: 5</span>
+    </div>
+    <span class="mem-layout-arrow">&rarr;</span>
+    <span class="mem-layout-heap-marker">(heap)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">h</span>
+      <span class="mem-layout-block data">e</span>
+      <span class="mem-layout-block data">l</span>
+      <span class="mem-layout-block data">l</span>
+      <span class="mem-layout-block data">o</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">&nbsp;&nbsp;String[1]</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+      <span class="mem-layout-block len">len: 5</span>
+      <span class="mem-layout-block cap">cap: 5</span>
+    </div>
+    <span class="mem-layout-arrow">&rarr;</span>
+    <span class="mem-layout-heap-marker">(heap)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">w</span>
+      <span class="mem-layout-block data">o</span>
+      <span class="mem-layout-block data">r</span>
+      <span class="mem-layout-block data">l</span>
+      <span class="mem-layout-block data">d</span>
+    </div>
+  </div>
+  <span class="mem-layout-note">Three levels of indirection: Vec &rarr; String metadata &rarr; char data</span>
+</div>
 
 - Stack: 24 bytes (Vec metadata)
 - Heap: 48 bytes (2 × String metadata: 2 × 24 bytes) + 10 bytes (string data)
@@ -176,19 +256,45 @@ Compare this with an array of string literals:
 let arr: [&str; 2] = ["hello", "world"];
 ```
 
-```bob
-STACK                             DATA segment
-+------------------+
-| "arr: [&str; 2]" |
-+------------------+          +---+---+---+---+---+
-|   "ptr:" *-------+--------->| h | e | l | l | o |
-|   "len:" 5       |          +---+---+---+---+---+
-+------------------+
-|   "ptr:" *-------+-----+    +---+---+---+---+---+
-|   "len:" 5       |     +--->| w | o | r | l | d |
-+------------------+          +---+---+---+---+---+
-    32 bytes
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">arr (stack, 32B)</span>
+    <span class="mem-layout-heap-marker">[&amp;str; 2]</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">&nbsp;&nbsp;&amp;str[0]</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+      <span class="mem-layout-block len">len: 5</span>
+    </div>
+    <span class="mem-layout-arrow">&rarr;</span>
+    <span class="mem-layout-heap-marker">(DATA)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">h</span>
+      <span class="mem-layout-block data">e</span>
+      <span class="mem-layout-block data">l</span>
+      <span class="mem-layout-block data">l</span>
+      <span class="mem-layout-block data">o</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">&nbsp;&nbsp;&amp;str[1]</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+      <span class="mem-layout-block len">len: 5</span>
+    </div>
+    <span class="mem-layout-arrow">&rarr;</span>
+    <span class="mem-layout-heap-marker">(DATA)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">w</span>
+      <span class="mem-layout-block data">o</span>
+      <span class="mem-layout-block data">r</span>
+      <span class="mem-layout-block data">l</span>
+      <span class="mem-layout-block data">d</span>
+    </div>
+  </div>
+  <span class="mem-layout-note">Stack: 32 bytes (2 fat pointers) &mdash; Heap: 0 bytes! Data lives in binary</span>
+</div>
 
 - Stack: 32 bytes (2 × `&str`, each is a fat pointer: 8-byte ptr + 8-byte len)
 - Heap: **0 bytes!** String literals live in the DATA segment, baked into the

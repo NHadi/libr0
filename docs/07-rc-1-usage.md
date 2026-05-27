@@ -76,38 +76,102 @@ let clone2 = rc_data.clone();  // ✅ CHEAP: Just increments a counter
 
 **Cloning a `Vec` directly - EXPENSIVE (O(n)):**
 
-```bob
-    Before clone             |         After clone
-                             |
-Stack           Heap         |    Stack           Heap
-+------+       +---+---+---+ |  +------+       +---+---+---+
-| data |------>| 1 | 2 | 3 | |  | data |------>| 1 | 2 | 3 |
-+------+       +---+---+---+ |  +------+       +---+---+---+
-                             | 
-                             |  +--------+     +---+---+---+
-                             |  | clone1 |---->| 1 | 2 | 3 |  <- NEW copy!
-                             |  +--------+     +---+---+---+
-                             |
-                             |  Two separate allocations, all elements copied
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">Before clone:</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">data</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+    </div>
+    <span class="mem-layout-arrow">→</span>
+    <span class="mem-layout-heap-marker">(heap)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">1</span>
+      <span class="mem-layout-block val">2</span>
+      <span class="mem-layout-block val">3</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">After clone:</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">data</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+    </div>
+    <span class="mem-layout-arrow">→</span>
+    <span class="mem-layout-heap-marker">(heap)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">1</span>
+      <span class="mem-layout-block val">2</span>
+      <span class="mem-layout-block val">3</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">clone1</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+    </div>
+    <span class="mem-layout-arrow">→</span>
+    <span class="mem-layout-heap-marker">(heap)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">1</span>
+      <span class="mem-layout-block val">2</span>
+      <span class="mem-layout-block val">3</span>
+    </div>
+    <span class="mem-layout-note">← NEW separate copy!</span>
+  </div>
+  <div class="mem-layout-note">Two separate heap allocations, all elements copied</div>
+</div>
 
 **Cloning an `Rc<Vec>` - CHEAP (O(1)):**
 
-```bob
-Before":"                          |       After Rc"::clone:"
-                                   |
-Stack             Heap             |   Stack             Heap
-                                   |
-+---------+      +--------------+  |  +---------+     +--------------+
-| rc_data |----->| "count:"1    |  |  | rc_data |-+-->| "count:"2    |
-+---------+      | +---+---+---+|  |  +---------+ |   | +---+---+---+|
-                 | | 1 | 2 | 3 ||  |              |   | | 1 | 2 | 3 ||
-                 | +---+---+---+|  |  +--------+  |   | +---+---+---+|
-                 +--------------+  |  | clone2 |--+   +--------------+
-                                   |  +--------+
-                                   
-                                 Same allocation, counter incremented
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">Before:</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">rc_data</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+    </div>
+    <span class="mem-layout-arrow">→</span>
+    <span class="mem-layout-heap-marker">(heap)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block len">count: 1</span>
+      <span class="mem-layout-block val">1</span>
+      <span class="mem-layout-block val">2</span>
+      <span class="mem-layout-block val">3</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">After Rc::clone:</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">rc_data</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+    </div>
+    <span class="mem-layout-arrow">→</span>
+    <span class="mem-layout-heap-marker">(heap)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block len">count: 2</span>
+      <span class="mem-layout-block val">1</span>
+      <span class="mem-layout-block val">2</span>
+      <span class="mem-layout-block val">3</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">clone2</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+    </div>
+    <span class="mem-layout-arrow">↗</span>
+    <span class="mem-layout-note">same allocation, counter incremented</span>
+  </div>
+</div>
 
 **`Rc::clone()` only clones the pointer, not the data!**
 
@@ -262,23 +326,45 @@ let list2 = List::Cons(0, Rc::clone(&tail));
 
 Imagine two nodes referencing each other:
 
-```bob
-Stack               Heap
-
-+---+      +--------------------+
-| a |----->| Rc<Node>           | 
-+---+      | "strong_count:"2   | 
-           | "next:" *          +<--.
-           +---------|----------+   |
-                     |              |
-                     |              |
-                     v              |
-           +--------------------+   +
-+---+      | Rc<Node>           |   |
-| b |----->| "strong_count:"2   |   |
-+---+      | "next:" *----------+---'
-           +--------------------+
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">Stack</span>
+    <span class="mem-layout-label" style="min-width:auto">→</span>
+    <span class="mem-layout-label">Heap</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">a</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+    </div>
+    <span class="mem-layout-arrow">→</span>
+    <span class="mem-layout-heap-marker">(heap)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block len">strong_count: 2</span>
+      <span class="mem-layout-block tag">next</span>
+      <span class="mem-layout-block ptr">ptr ──╮</span>
+    </div>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label"></span>
+    <span class="mem-layout-note" style="margin-left:auto">╰──────────────────╮</span>
+  </div>
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">b</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">ptr</span>
+    </div>
+    <span class="mem-layout-arrow">→</span>
+    <span class="mem-layout-heap-marker">(heap)</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block len">strong_count: 2</span>
+      <span class="mem-layout-block tag">next</span>
+      <span class="mem-layout-block ptr">ptr ──╯</span>
+    </div>
+    <span class="mem-layout-note">↑ points back to node_a</span>
+  </div>
+  <div class="mem-layout-note">Cycle: node_a.next → node_b, node_b.next → node_a. Neither can reach count 0!</div>
+</div>
 
 **When the stack variables drop:**
 

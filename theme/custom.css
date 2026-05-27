@@ -951,7 +951,7 @@ div:has(+ .mem-diagram-enhanced) {
     background: #fff8f0;
     border-left: 4px solid var(--rust-orange);
     border-radius: 4px;
-    font-family: 'JetBrains Mono', 'SF Mono', monospace;
+    font-family: 'SF Mono', 'Monaco', 'JetBrains Mono', monospace;
 }
 
 .mem-layout-row {
@@ -975,9 +975,9 @@ div:has(+ .mem-diagram-enhanced) {
 }
 
 .mem-layout-block {
-    padding: 6px 12px;
+    padding: 5px 10px;
     border-radius: 3px;
-    font-size: 0.75rem;
+    font-size: 0.8em;
     font-weight: 500;
     border: 1px solid;
     text-align: center;

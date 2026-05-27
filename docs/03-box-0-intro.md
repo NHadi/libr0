@@ -80,18 +80,22 @@ The **heap** is for dynamic allocation:
 3. Keeps a pointer to that memory on the stack
 4. Automatically frees the memory when dropped
 
-```bob
-   STACK        |       HEAP
-                |
-+---------+     |     +---------+
-| Box<T>  |     |     |    T    |
-+---------+     |     +---------+
-|  ptr *--+-----+---->|  value  |
-+---------+     |     +---------+
-  8 bytes       |       size of T
-                |
-
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <div>
+      <div class="mem-layout-label">Box&lt;T&gt;</div>
+      <div class="mem-layout-blocks">
+        <div class="mem-layout-block ptr">ptr</div>
+      </div>
+    </div>
+    <div class="mem-layout-arrow">→</div>
+    <div class="mem-layout-heap-marker">(heap)</div>
+    <div class="mem-layout-blocks">
+      <div class="mem-layout-block val">value: T</div>
+    </div>
+  </div>
+  <div class="mem-layout-note">Box&lt;T&gt; is 8 bytes on the stack (a pointer), pointing to a T-sized allocation on the heap.</div>
+</div>
 
 ## Why Use Box?
 
@@ -108,23 +112,21 @@ enum List {
 
 **Memory layout without Box (infinite, this confuses the compiler!):**
 
-```bob
-+-------------------------------+
-| Cons                          |
-+-----+-------------------------+ 
-| i32 | Cons                    | 
-|     +-------------------------+ 
-|     | i32 | Cons              | 
-|     |     +-----+-------------+ 
-|     |     | i32 | Cons        | 
-|     |     |     +-----+-------+ 
-|     |     |     | i32 | Cons  | 
-|     |     |     |     +-------+
-|     |     |     |     | ...   |
-+-----+-----+-----+-----+-------+
-
-  ... infinite nesting!
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <div>
+      <div class="mem-layout-label">List (infinite!)</div>
+      <div class="mem-layout-blocks">
+        <div class="mem-layout-block val">i32</div>
+        <div class="mem-layout-block val">i32</div>
+        <div class="mem-layout-block val">i32</div>
+        <div class="mem-layout-block val">i32</div>
+        <div class="mem-layout-block freed">…∞</div>
+      </div>
+    </div>
+  </div>
+  <div class="mem-layout-note">Without Box, each Cons contains another List inline — the size is infinite and the compiler cannot compute it.</div>
+</div>
 
 The compiler tries to calculate: `size(List) = 4 + size(List) = 4 + 4 + size(List) = ...` - it never ends.
 
@@ -154,23 +156,29 @@ So `Box<List>` doesn't contain a `List`. It contains a _pointer_ to a `List` som
 
 **Memory layout with Box, fixed!:**
 
-```bob
-        STACK              |              HEAP
-                           |
-+---------------------+    |    +---------------------+
-| Cons                |    |    | Cons                |
-+---------------------+    |    +---------------------+
-| i32 "(4 bytes)"     |    |    | i32: 4 bytes        |
-+---------------------+    |    +---------------------+    +---------------------+
-| ptr: *--------------+----+--->| ptr: *--------------+--->| List::Nil           |
-|  "(8 bytes)"        |    |    |  "(8 bytes)"        |    +---------------------+
-+---------------------+    |    +---------------------+   
-| Total: 12 bytes     |    |    | Total: 12 bytes     |   
-+---------------------+    |    +---------------------+   
-                           |
-                           |
-                           |
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <div>
+      <div class="mem-layout-label">Cons (stack, 12 bytes)</div>
+      <div class="mem-layout-blocks">
+        <div class="mem-layout-block val">i32 (4B)</div>
+        <div class="mem-layout-block ptr">ptr (8B)</div>
+      </div>
+    </div>
+    <div class="mem-layout-arrow">→</div>
+    <div class="mem-layout-heap-marker">(heap)</div>
+    <div class="mem-layout-blocks">
+      <div class="mem-layout-block val">i32 (4B)</div>
+      <div class="mem-layout-block ptr">ptr (8B)</div>
+    </div>
+    <div class="mem-layout-arrow">→</div>
+    <div class="mem-layout-heap-marker">(heap)</div>
+    <div class="mem-layout-blocks">
+      <div class="mem-layout-block tag">Nil</div>
+    </div>
+  </div>
+  <div class="mem-layout-note">With Box, each Cons is a fixed 12 bytes (i32 + pointer). The pointer indirection breaks the infinite size recursion.</div>
+</div>
 
 The arrows show where each pointer **points to** in memory (addresses like `0x1000`, `0x2000`). The Box itself is just 8 bytes storing an address.
 

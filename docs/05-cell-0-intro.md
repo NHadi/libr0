@@ -306,25 +306,35 @@ println!("{}", r1);  // DANGER: r1 still pointing to the value inside the cell!
 
 **Step 1: `cell.get_ref()` returns a reference**
 
-```bob
-+---------------+
-| Cell<i32>     |
-| +-----------+ |
-| | value: 5  | | <----- r1: &i32 points here
-| +-----------+ |        Remember, &i32 is immutable!
-+---------------+
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">Cell&lt;i32&gt;</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">value: 5</span>
+    </div>
+    <span class="mem-layout-arrow">←</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">r1: &amp;i32</span>
+    </div>
+  </div>
+  <div class="mem-layout-note">r1 points directly into Cell's memory. Remember, &amp;i32 is immutable!</div>
+</div>
 
 **Step 2: `cell.set(10)` changes the value**
 
-```bob
-+---------------+
-| Cell<i32>     |
-| +-----------+ |
-| | value: 10 | | <----- r1: &i32 STILL points here!
-| +-----------+ |        But r1 is supposed to be immutable!
-+---------------+        The data it points to changed!
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">Cell&lt;i32&gt;</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">value: 10</span>
+    </div>
+    <span class="mem-layout-arrow">←</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block ptr">r1: &amp;i32</span>
+    </div>
+  </div>
+  <div class="mem-layout-note">r1 STILL points here! But r1 is supposed to be immutable — the data it points to changed!</div>
+</div>
 
 **BROKEN:** r1 points into Cell's memory, and that memory can be mutated.
 This violates Rust's aliasing rules: you have an immutable reference (&i32)
@@ -346,36 +356,49 @@ println!("{}", n);  // Still reads 5, because n is a copy, not a reference!
 
 **Initial state:**
 
-```bob
-+--------------+
-| Cell<i32>    |
-| +----------+ |
-| | value: 5 | |  <- Value lives inside Cell
-| +----------+ |
-+--------------+
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">Cell&lt;i32&gt;</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">value: 5</span>
+    </div>
+  </div>
+  <div class="mem-layout-note">Value lives inside Cell — no references escape.</div>
+</div>
 
 **`cell.get()` - Returns a COPY:**
 
-```bob
-+--------------+
-| Cell<i32>    |
-| +----------+ |    copy    +----+
-| | value: 5 | | ---------> | 5  |  <- Copy created in new memory location
-| +----------+ |            +----+    no reference to Cell's internal value!
-+--------------+
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">Cell&lt;i32&gt;</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">value: 5</span>
+    </div>
+    <span class="mem-layout-arrow">→</span>
+    <span class="mem-layout-label">copy</span>
+    <span class="mem-layout-arrow">→</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">5</span>
+    </div>
+  </div>
+  <div class="mem-layout-note">cell.get() returns a copy in new memory — no reference to Cell's internal value!</div>
+</div>
 
 **`cell.set(10)` - REPLACES the value:**
 
-```bob
-+---------------+
-| Cell<i32>     |
-| +-----------+ |            +----+
-| | value: 10 | |            | 5  |  <- Old value still 5
-| +-----------+ |            +----+
-+---------------+
-```
+<div class="mem-layout">
+  <div class="mem-layout-row">
+    <span class="mem-layout-label">Cell&lt;i32&gt;</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block val">value: 10</span>
+    </div>
+    <span class="mem-layout-label" style="min-width:auto; margin-left:24px;">n:</span>
+    <div class="mem-layout-blocks">
+      <span class="mem-layout-block data">5</span>
+    </div>
+  </div>
+  <div class="mem-layout-note">cell.set(10) replaces the inner value. The old copy (n) is unaffected — still 5.</div>
+</div>
 
 **Key insight**: You never get `&i32` or `&mut i32` pointing to the value inside Cell's box. Only copies come out. The inner value never escapes as a reference.
 
