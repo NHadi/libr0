@@ -1,22 +1,403 @@
+/**
+ * diagram-enhance.js - Professional Memory Diagram Renderer
+ * 
+ * Transforms svgbob ASCII memory diagrams into cheats.rs-style
+ * colored block visualizations. Works by post-processing the
+ * rendered SVG output from mdbook-svgbob.
+ * 
+ * Strategy: Style the SVG elements directly with professional colors
+ * and typography, making them look like cheats.rs memory layout diagrams.
+ */
 (function () {
     'use strict';
 
-    /**
-     * Make sections with "assembly" or specific technical headings collapsible.
-     */
+    // ========================================
+    // COLOR PALETTE (cheats.rs inspired)
+    // ========================================
+    var PALETTE = {
+        // Background
+        bg: '#0d1117',
+        bgCard: '#161b22',
+        bgHover: '#1c2128',
+
+        // Text
+        textPrimary: '#e6edf3',
+        textSecondary: '#8b949e',
+        textMuted: '#484f58',
+
+        // Semantic colors for memory fields
+        ptr: '#58a6ff',       // blue - pointers
+        len: '#7ee787',       // green - lengths
+        cap: '#d2a8ff',       // purple - capacity
+        value: '#ffa657',     // orange - values/data
+        tag: '#d2a8ff',       // purple - discriminants
+        strong: '#7ee787',    // green - strong count
+        weak: '#8b949e',      // gray - weak count
+        borrow: '#d2a8ff',    // purple - borrow count
+        data: '#ffa657',      // orange - raw data bytes
+        freed: '#484f58',     // dark gray - freed memory
+        type: '#ff7b72',      // red - type names
+        label: '#79c0ff',     // light blue - labels
+        arrow: '#8b949e',     // gray - arrows/lines
+        border: '#30363d',    // border color
+        borderAccent: '#f78166', // rust orange border
+        heap: '#1f6feb33',    // blue tint for heap regions
+        stack: '#23863633',   // green tint for stack regions
+    };
+
+    // ========================================
+    // MAIN ENHANCEMENT FUNCTION
+    // ========================================
+
+    function enhanceAllDiagrams() {
+        // Target all svgbob-rendered containers
+        var containers = document.querySelectorAll('div.svgbob');
+        if (containers.length === 0) {
+            // Try alternate selectors
+            containers = document.querySelectorAll('pre > code.language-bob');
+            if (containers.length > 0) {
+                enhanceCodeBlocks(containers);
+                return;
+            }
+            // Also try finding SVGs directly
+            var svgs = document.querySelectorAll('svg.svgbob');
+            if (svgs.length > 0) {
+                enhanceSvgDiagrams(svgs);
+            }
+            return;
+        }
+        enhanceSvgContainers(containers);
+    }
+
+    // ========================================
+    // SVG ENHANCEMENT (for rendered svgbob output)
+    // ========================================
+
+    function enhanceSvgDiagrams(svgs) {
+        svgs.forEach(function (svg) {
+            var container = svg.parentElement;
+            styleSvgContainer(container, svg);
+        });
+    }
+
+    function enhanceSvgContainers(containers) {
+        containers.forEach(function (container) {
+            var svg = container.querySelector('svg');
+            if (svg) {
+                styleSvgContainer(container, svg);
+            }
+        });
+    }
+
+    function styleSvgContainer(container, svg) {
+        // Style the container
+        container.style.background = PALETTE.bg;
+        container.style.borderRadius = '8px';
+        container.style.border = '1px solid ' + PALETTE.border;
+        container.style.borderLeft = '4px solid ' + PALETTE.borderAccent;
+        container.style.padding = '20px 24px';
+        container.style.margin = '1.5em 0';
+        container.style.overflowX = 'auto';
+        container.style.position = 'relative';
+
+        // Style SVG elements
+        svg.style.maxWidth = '100%';
+        svg.style.height = 'auto';
+
+        // Style all text elements
+        var texts = svg.querySelectorAll('text');
+        texts.forEach(function (text) {
+            text.style.fontFamily = "'JetBrains Mono', 'SF Mono', 'Fira Code', monospace";
+            text.style.fontSize = '12px';
+
+            var content = text.textContent.trim();
+            var color = getTextColor(content);
+            text.setAttribute('fill', color);
+            text.style.fill = color;
+        });
+
+        // Style lines and paths (structural elements)
+        var lines = svg.querySelectorAll('line');
+        lines.forEach(function (line) {
+            line.setAttribute('stroke', PALETTE.border);
+            line.style.stroke = PALETTE.border;
+        });
+
+        var paths = svg.querySelectorAll('path');
+        paths.forEach(function (path) {
+            var stroke = path.getAttribute('stroke');
+            if (stroke && stroke !== 'none') {
+                path.setAttribute('stroke', PALETTE.arrow);
+                path.style.stroke = PALETTE.arrow;
+            }
+            var fill = path.getAttribute('fill');
+            if (fill && fill !== 'none' && fill !== 'transparent') {
+                path.setAttribute('fill', PALETTE.arrow);
+            }
+        });
+
+        // Style rectangles
+        var rects = svg.querySelectorAll('rect');
+        rects.forEach(function (rect) {
+            var stroke = rect.getAttribute('stroke');
+            if (stroke && stroke !== 'none') {
+                rect.setAttribute('stroke', PALETTE.border);
+                rect.style.stroke = PALETTE.border;
+            }
+            var fill = rect.getAttribute('fill');
+            if (fill && fill !== 'none' && fill !== 'transparent') {
+                // Check if it's a background rect or a content rect
+                var width = parseFloat(rect.getAttribute('width') || 0);
+                var height = parseFloat(rect.getAttribute('height') || 0);
+                if (width > 500 && height > 200) {
+                    // Large background rect
+                    rect.setAttribute('fill', 'transparent');
+                } else {
+                    rect.setAttribute('fill', PALETTE.bgCard);
+                }
+            }
+        });
+
+        // Style polygons (arrows)
+        var polygons = svg.querySelectorAll('polygon');
+        polygons.forEach(function (poly) {
+            poly.setAttribute('fill', PALETTE.arrow);
+            poly.setAttribute('stroke', PALETTE.arrow);
+        });
+
+        // Style circles
+        var circles = svg.querySelectorAll('circle');
+        circles.forEach(function (circle) {
+            var fill = circle.getAttribute('fill');
+            if (fill && fill !== 'none') {
+                circle.setAttribute('fill', PALETTE.arrow);
+            }
+            var stroke = circle.getAttribute('stroke');
+            if (stroke && stroke !== 'none') {
+                circle.setAttribute('stroke', PALETTE.border);
+            }
+        });
+
+        // Add region labels if STACK/HEAP detected
+        addRegionOverlays(container, svg, texts);
+    }
+
+    // ========================================
+    // SMART TEXT COLORING
+    // ========================================
+
+    function getTextColor(content) {
+        if (!content) return PALETTE.textPrimary;
+
+        var c = content.toLowerCase().trim();
+
+        // Type names and struct names
+        if (c.match(/^(box|vec|string|rc|cell|refcell|option|result|unsafecell|node|cons|list|number)/i)) {
+            return PALETTE.type;
+        }
+        if (c.match(/^(box<|vec<|rc<|cell<|refcell<|option<|result<|&str|&\[)/i)) {
+            return PALETTE.type;
+        }
+
+        // Pointer fields
+        if (c.match(/^ptr[:\s]|^ptr$|^\*|pointer|0x[0-9a-f]/i)) {
+            return PALETTE.ptr;
+        }
+
+        // Length fields
+        if (c.match(/^len[:\s]|^len$|^length/i)) {
+            return PALETTE.len;
+        }
+
+        // Capacity fields
+        if (c.match(/^cap[:\s]|^cap$|^capacity/i)) {
+            return PALETTE.cap;
+        }
+
+        // Strong/weak counts
+        if (c.match(/strong|count/i)) {
+            return PALETTE.strong;
+        }
+        if (c.match(/weak/i)) {
+            return PALETTE.weak;
+        }
+
+        // Borrow state
+        if (c.match(/borrow/i)) {
+            return PALETTE.borrow;
+        }
+
+        // Region labels
+        if (c.match(/^stack$|^heap$|^data|^rodata|^text|^bss/i)) {
+            return PALETTE.label;
+        }
+
+        // Freed/consumed
+        if (c.match(/freed|consumed|invalid|empty/i)) {
+            return PALETTE.freed;
+        }
+
+        // Size annotations
+        if (c.match(/bytes|byte|\d+\s*b\b/i)) {
+            return PALETTE.textSecondary;
+        }
+
+        // Comments and notes
+        if (c.match(/^[<>←→↑↓]|grows|points|note|each|total|no |all /i)) {
+            return PALETTE.textSecondary;
+        }
+
+        // Variable names (x:, y:, s:, v:, etc.)
+        if (c.match(/^[a-z_]\w*:/)) {
+            return PALETTE.textPrimary;
+        }
+
+        // Single characters (data bytes like h, e, l, l, o)
+        if (c.length === 1 && c.match(/[a-z0-9]/i)) {
+            return PALETTE.data;
+        }
+
+        // Numbers
+        if (c.match(/^\d+$/)) {
+            return PALETTE.value;
+        }
+
+        // Arrows and structural
+        if (c.match(/^[-|+.=*><!~^v]+$/)) {
+            return PALETTE.arrow;
+        }
+
+        return PALETTE.textPrimary;
+    }
+
+    // ========================================
+    // REGION OVERLAYS (STACK/HEAP labels)
+    // ========================================
+
+    function addRegionOverlays(container, svg, texts) {
+        var hasStack = false;
+        var hasHeap = false;
+
+        texts.forEach(function (t) {
+            var content = t.textContent.trim().toUpperCase();
+            if (content === 'STACK') hasStack = true;
+            if (content === 'HEAP') hasHeap = true;
+        });
+
+        if (hasStack || hasHeap) {
+            // Add a subtle top bar with region indicators
+            var bar = document.createElement('div');
+            bar.style.cssText = 'display:flex;gap:12px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid ' + PALETTE.border + ';';
+
+            if (hasStack) {
+                var stackBadge = createBadge('STACK', PALETTE.strong, '#23863622');
+                bar.appendChild(stackBadge);
+            }
+            if (hasHeap) {
+                var heapBadge = createBadge('HEAP', PALETTE.ptr, '#1f6feb22');
+                bar.appendChild(heapBadge);
+            }
+
+            container.insertBefore(bar, container.firstChild);
+        }
+    }
+
+    function createBadge(text, color, bg) {
+        var badge = document.createElement('span');
+        badge.textContent = text;
+        badge.style.cssText = 'font-family:"JetBrains Mono",monospace;font-size:0.6rem;font-weight:700;letter-spacing:0.12em;padding:2px 8px;border-radius:3px;color:' + color + ';background:' + bg + ';border:1px solid ' + color + '33;';
+        return badge;
+    }
+
+    // ========================================
+    // CODE BLOCK ENHANCEMENT (fallback for unprocessed bob blocks)
+    // ========================================
+
+    function enhanceCodeBlocks(codeElements) {
+        codeElements.forEach(function (code) {
+            var pre = code.parentElement;
+            if (!pre) return;
+
+            // Style the pre/code block
+            pre.style.background = PALETTE.bg;
+            pre.style.borderRadius = '8px';
+            pre.style.border = '1px solid ' + PALETTE.border;
+            pre.style.borderLeft = '4px solid ' + PALETTE.borderAccent;
+            pre.style.padding = '20px 24px';
+            pre.style.margin = '1.5em 0';
+            pre.style.overflowX = 'auto';
+
+            code.style.background = 'none';
+            code.style.color = PALETTE.textPrimary;
+            code.style.fontFamily = "'JetBrains Mono', 'SF Mono', monospace";
+            code.style.fontSize = '0.8rem';
+            code.style.lineHeight = '1.5';
+
+            // Colorize the text content
+            colorizeCodeBlock(code);
+        });
+    }
+
+    function colorizeCodeBlock(code) {
+        var html = code.innerHTML;
+
+        // Colorize known patterns
+        var replacements = [
+            // Type names
+            [/\b(Box|Vec|String|Rc|Cell|RefCell|Option|Result|UnsafeCell|Node|Cons|List)\b/g,
+                '<span style="color:' + PALETTE.type + '">$1</span>'],
+            // Pointer fields
+            [/\b(ptr)(\s*[:*])/g,
+                '<span style="color:' + PALETTE.ptr + '">$1</span>$2'],
+            // Length fields
+            [/\b(len)(\s*[:])/g,
+                '<span style="color:' + PALETTE.len + '">$1</span>$2'],
+            // Capacity fields
+            [/\b(cap)(\s*[:])/g,
+                '<span style="color:' + PALETTE.cap + '">$1</span>$2'],
+            // Strong/weak
+            [/\b(strong_count|strong|weak_count|weak)\b/g,
+                '<span style="color:' + PALETTE.strong + '">$1</span>'],
+            // Borrow
+            [/\b(borrow_count|borrow)\b/g,
+                '<span style="color:' + PALETTE.borrow + '">$1</span>'],
+            // Region labels
+            [/\b(STACK|HEAP|DATA|RODATA|TEXT)\b/g,
+                '<span style="color:' + PALETTE.label + ';font-weight:700">$1</span>'],
+            // Hex addresses
+            [/(0x[0-9A-Fa-f_]+)/g,
+                '<span style="color:' + PALETTE.ptr + '">$1</span>'],
+            // Size annotations
+            [/(\d+\s*bytes?)/gi,
+                '<span style="color:' + PALETTE.textSecondary + '">$1</span>'],
+            // Freed/consumed
+            [/\b(freed|consumed)\b/gi,
+                '<span style="color:' + PALETTE.freed + ';text-decoration:line-through">$1</span>'],
+        ];
+
+        replacements.forEach(function (r) {
+            html = html.replace(r[0], r[1]);
+        });
+
+        code.innerHTML = html;
+    }
+
+    // ========================================
+    // COLLAPSIBLE SECTIONS
+    // ========================================
+
     function makeCollapsible() {
         var headings = document.querySelectorAll('#content main h3, #content main h4');
         headings.forEach(function (heading) {
             var text = heading.textContent.toLowerCase();
             if (text.indexOf('inside') === -1 && text.indexOf('assembly') === -1) return;
-            if (heading.closest('details')) return; // Already wrapped
+            if (heading.closest('details')) return;
 
             var wrapper = document.createElement('details');
             var summary = document.createElement('summary');
             summary.className = 'collapsible-summary';
             summary.textContent = heading.textContent;
 
-            // Gather all siblings until next heading
             var elements = [];
             var sibling = heading.nextElementSibling;
             while (sibling && !['H1', 'H2', 'H3', 'H4'].includes(sibling.tagName)) {
@@ -24,26 +405,83 @@
                 sibling = sibling.nextElementSibling;
             }
 
-            // Only make it collapsible if there's enough content (more than 1 block)
             if (elements.length < 2) return;
 
             heading.parentNode.insertBefore(wrapper, heading);
             wrapper.appendChild(summary);
-
             elements.forEach(function (el) {
                 wrapper.appendChild(el);
             });
-
             heading.remove();
         });
     }
 
-    // Run on page load
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () {
-            makeCollapsible();
+    // ========================================
+    // PROFESSIONAL ICON REPLACEMENT
+    // Replace ✅ and ❌ emoji with styled SVG icons
+    // ========================================
+
+    function replaceEmojiIcons() {
+        var checkSvg = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5 6 5 8.5 9.5 3.5"/></svg>';
+        var crossSvg = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="3" x2="9" y2="9"/><line x1="9" y1="3" x2="3" y2="9"/></svg>';
+
+        var checkHtml = '<span class="icon-check" aria-label="correct">' + checkSvg + '</span>';
+        var crossHtml = '<span class="icon-cross" aria-label="incorrect">' + crossSvg + '</span>';
+
+        // Walk through all text nodes in the content area
+        var content = document.querySelector('#content main') || document.querySelector('#content') || document.body;
+        replaceInElement(content, checkHtml, crossHtml);
+    }
+
+    function replaceInElement(element, checkHtml, crossHtml) {
+        // Process child nodes
+        var nodes = Array.prototype.slice.call(element.childNodes);
+
+        nodes.forEach(function (node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                var text = node.textContent;
+                if (text.indexOf('✅') === -1 && text.indexOf('❌') === -1) return;
+
+                // Replace emoji with HTML
+                var html = text
+                    .replace(/✅/g, checkHtml)
+                    .replace(/❌/g, crossHtml);
+
+                var wrapper = document.createElement('span');
+                wrapper.innerHTML = html;
+
+                // Replace text node with the new nodes
+                var parent = node.parentNode;
+                while (wrapper.firstChild) {
+                    parent.insertBefore(wrapper.firstChild, node);
+                }
+                parent.removeChild(node);
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                // Skip script and style elements
+                var tag = node.tagName.toLowerCase();
+                if (tag === 'script' || tag === 'style' || tag === 'textarea') return;
+                // Recurse into child elements
+                replaceInElement(node, checkHtml, crossHtml);
+            }
         });
-    } else {
+    }
+
+    // ========================================
+    // INITIALIZATION
+    // ========================================
+
+    function init() {
         makeCollapsible();
+        replaceEmojiIcons();
+        // Delay to ensure svgbob has rendered
+        setTimeout(enhanceAllDiagrams, 300);
+        // Run again after a longer delay in case of slow rendering
+        setTimeout(enhanceAllDiagrams, 1000);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
     }
 })();

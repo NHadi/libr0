@@ -1,5 +1,5 @@
 /* Tokio-Inspired Markdown Styles for libr0 */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
     --rust-orange: #CE422B;
@@ -437,21 +437,16 @@ body::after {
 
 /* Special backgrounds for diagram blocks */
 
-/* Bob diagrams (rendered as SVG) */
-#content main div:has(svg.svgbob) {
-    background: #fff8f0;
-    border-left: 4px solid var(--rust-orange);
-    border-radius: 4px;
-    padding: 16px;
-    margin: 1.5em 0;
-}
+/* Bob diagrams (rendered as SVG) - handled by enhanced section below */
 
 /* Mermaid diagrams */
 #content main div:has(.mermaid),
 #content main pre:has(code.language-mermaid) {
-    background: #f0f9ff;
+    background: #0d1117;
     border-left: 4px solid #0ea5e9;
-    border-radius: 4px;
+    border: 1px solid #30363d;
+    border-left: 4px solid #0ea5e9;
+    border-radius: 8px;
     padding: 16px;
     margin: 1.5em 0;
 }
@@ -668,6 +663,70 @@ a img[src*="badge"] {
 }
 
 /* ========================================
+   PROFESSIONAL CHECK/CROSS ICONS
+   Replace ✅ and ❌ emoji with styled SVG icons
+   ======================================== */
+
+/* Inline icon styling for check and cross marks */
+.icon-check,
+.icon-cross {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+
+.icon-check {
+    background: rgba(72, 187, 120, 0.15);
+    border: 1.5px solid rgba(72, 187, 120, 0.5);
+    color: #48bb78;
+}
+
+.icon-cross {
+    background: rgba(245, 101, 101, 0.12);
+    border: 1.5px solid rgba(245, 101, 101, 0.45);
+    color: #f56565;
+}
+
+.icon-check svg,
+.icon-cross svg {
+    width: 10px;
+    height: 10px;
+}
+
+/* Inside code blocks, make them slightly smaller */
+pre .icon-check,
+pre .icon-cross,
+code .icon-check,
+code .icon-cross {
+    width: 14px;
+    height: 14px;
+    margin-right: 2px;
+}
+
+pre .icon-check svg,
+pre .icon-cross svg,
+code .icon-check svg,
+code .icon-cross svg {
+    width: 8px;
+    height: 8px;
+}
+
+/* Table cells with icons */
+td .icon-check,
+td .icon-cross,
+th .icon-check,
+th .icon-cross {
+    width: 16px;
+    height: 16px;
+}
+
+/* ========================================
    DARK THEME SUPPORT
    ======================================== */
 
@@ -698,4 +757,283 @@ a img[src*="badge"] {
 .coal .philosophy-item,
 .ayu .philosophy-item {
     background: rgba(22, 27, 34, 0.8);
+}
+
+
+/* ========================================
+   ENHANCED MEMORY DIAGRAMS (cheats.rs style)
+   ======================================== */
+
+.mem-diagram-enhanced {
+    margin: 1.5em 0;
+    padding: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(206, 66, 43, 0.15);
+    background: #0d1117;
+    font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', monospace;
+}
+
+.mem-diagram-section {
+    padding: 20px 24px;
+}
+
+.mem-diagram-section + .mem-diagram-section {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mem-diagram-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #a0aec0;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mem-diagram-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.mem-region {
+    flex: 1;
+    min-width: 180px;
+}
+
+.mem-region-header {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.mem-region-stack .mem-region-header {
+    color: #9ae6b4;
+    background: rgba(72, 187, 120, 0.1);
+    border: 1px solid rgba(72, 187, 120, 0.2);
+}
+
+.mem-region-heap .mem-region-header {
+    color: #90cdf4;
+    background: rgba(66, 153, 225, 0.1);
+    border: 1px solid rgba(66, 153, 225, 0.2);
+}
+
+.mem-region-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.mem-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid;
+    font-size: 0.78rem;
+    min-height: 32px;
+    transition: all 0.15s;
+}
+
+.mem-field:hover {
+    filter: brightness(1.2);
+    transform: translateX(2px);
+}
+
+.mem-field-label {
+    font-weight: 600;
+}
+
+.mem-field-value {
+    font-weight: 400;
+    opacity: 0.8;
+    margin-left: 8px;
+}
+
+.mem-field-size {
+    font-size: 0.65rem;
+    opacity: 0.5;
+    margin-left: auto;
+    padding-left: 12px;
+}
+
+/* Freed/consumed fields */
+.mem-field-freed,
+.mem-field-consumed {
+    border-style: dashed;
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
+/* Arrow between stack and heap */
+.mem-diagram-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #718096;
+    padding: 0 4px;
+    align-self: center;
+}
+
+/* Override svgbob container styling for memory diagrams */
+#content main div:has(svg.svgbob) + .mem-diagram-enhanced {
+    margin-top: -0.5em;
+}
+
+/* Hide original svgbob when enhanced version exists */
+div:has(+ .mem-diagram-enhanced) {
+    display: none !important;
+}
+
+/* Improve existing svgbob diagrams that aren't enhanced */
+#content main svg.svgbob {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* All svgbob containers get dark professional styling */
+#content main div:has(> svg.svgbob),
+#content main .svgbob-container,
+#content main div.svgbob {
+    background: #0d1117 !important;
+    border-left: 4px solid var(--rust-orange);
+    border: 1px solid #30363d;
+    border-left: 4px solid var(--rust-orange);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 1.5em 0;
+    overflow-x: auto;
+    position: relative;
+}
+
+/* Style svgbob text elements - base color, JS will override with smart colors */
+#content main svg.svgbob text {
+    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace !important;
+    font-size: 12px !important;
+    fill: #e6edf3 !important;
+}
+
+/* Structural SVG elements */
+#content main svg.svgbob line {
+    stroke: #30363d !important;
+}
+
+#content main svg.svgbob path {
+    stroke: #8b949e !important;
+}
+
+#content main svg.svgbob rect {
+    stroke: #30363d !important;
+}
+
+#content main svg.svgbob polygon {
+    fill: #8b949e !important;
+    stroke: #8b949e !important;
+}
+
+#content main svg.svgbob circle {
+    stroke: #8b949e !important;
+}
+
+/* Dark theme for bob code blocks that haven't been processed by svgbob */
+#content main pre:has(code.language-bob) {
+    background: #0d1117 !important;
+    border-left: 4px solid var(--rust-orange);
+    border-radius: 8px;
+    padding: 20px;
+    overflow-x: auto;
+}
+
+#content main pre:has(code.language-bob) code {
+    color: #e2e8f0 !important;
+    background: none !important;
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+/* ========================================
+   INLINE MEMORY BLOCKS (for use in markdown)
+   ======================================== */
+
+/* Custom HTML blocks that can be used in markdown for professional diagrams */
+.mem-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 1.5em 0;
+    padding: 20px 24px;
+    background: #0d1117;
+    border: 1px solid rgba(206, 66, 43, 0.15);
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+.mem-layout-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.mem-layout-label {
+    min-width: 120px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.mem-layout-blocks {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+}
+
+.mem-layout-block {
+    padding: 6px 12px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.mem-layout-block.ptr { background: rgba(66,153,225,0.15); border-color: rgba(66,153,225,0.4); color: #90cdf4; }
+.mem-layout-block.len { background: rgba(72,187,120,0.15); border-color: rgba(72,187,120,0.4); color: #9ae6b4; }
+.mem-layout-block.cap { background: rgba(236,201,75,0.12); border-color: rgba(236,201,75,0.35); color: #fefcbf; }
+.mem-layout-block.val { background: rgba(206,66,43,0.12); border-color: rgba(206,66,43,0.35); color: #f6ad9a; }
+.mem-layout-block.tag { background: rgba(159,122,234,0.15); border-color: rgba(159,122,234,0.35); color: #c4b5fd; }
+.mem-layout-block.data { background: rgba(236,201,75,0.1); border-color: rgba(236,201,75,0.3); color: #fefcbf; }
+.mem-layout-block.freed { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); color: #4a5568; border-style: dashed; text-decoration: line-through; }
+
+.mem-layout-arrow {
+    color: #718096;
+    font-size: 1.1rem;
+    padding: 0 4px;
+}
+
+.mem-layout-heap-marker {
+    font-size: 0.6rem;
+    color: rgba(66, 153, 225, 0.6);
+    font-style: italic;
+    margin-left: 4px;
+}
+
+.mem-layout-note {
+    font-size: 0.7rem;
+    color: #718096;
+    margin-top: 4px;
+    font-style: italic;
 }
