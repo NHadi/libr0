@@ -1,4 +1,4 @@
-# Practice & Thread Safety
+﻿# Practice & Thread Safety
 
 ## Cell in Practice: Simple Examples
 

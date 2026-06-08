@@ -432,12 +432,12 @@
         nodes.forEach(function (node) {
             if (node.nodeType === Node.TEXT_NODE) {
                 var text = node.textContent;
-                if (text.indexOf('✅') === -1 && text.indexOf('❌') === -1) return;
+                if (!/[✅❌✗✓✔️✖❎☑️]/.test(text)) return;
 
                 // Replace emoji with HTML
                 var html = text
-                    .replace(/✅/g, checkHtml)
-                    .replace(/❌/g, crossHtml);
+                    .replace(/[✅✓✔️☑️]/g, checkHtml)
+                    .replace(/[❌✗✖❎]/g, crossHtml);
 
                 var wrapper = document.createElement('span');
                 wrapper.innerHTML = html;

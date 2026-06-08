@@ -1,4 +1,4 @@
-//! Chapter 2: Result - Exercises
+﻿//! Chapter 2: Result - Exercises
 //!
 //! Complete the TODO items to practice using Result0 methods.
 //! Run with: cargo run --example 02_result

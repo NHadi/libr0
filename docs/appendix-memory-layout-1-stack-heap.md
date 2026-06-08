@@ -1,4 +1,4 @@
-# Stack, Heap & Static Data
+﻿# Stack, Heap & Static Data
 
 ### The Stack
 
@@ -80,31 +80,22 @@ v.push(2);                      // adds to heap, len=2, cap=4
 
 **Stack memory layout:**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">number (stack)</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">n: 42 (4B)</span>
-    </div>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">v (stack, 24B)</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr (8B)</span>
-      <span class="mem-layout-block len">len: 2 (8B)</span>
-      <span class="mem-layout-block cap">cap: 4 (8B)</span>
-    </div>
-    <span class="mem-layout-arrow">&rarr;</span>
-    <span class="mem-layout-heap-marker">(heap)</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block data">1</span>
-      <span class="mem-layout-block data">2</span>
-      <span class="mem-layout-block freed">_</span>
-      <span class="mem-layout-block freed">_</span>
-    </div>
-  </div>
-  <span class="mem-layout-note">Total: 28 bytes on stack &mdash; heap has capacity for 2 more elements</span>
-</div>
+```bob
+
+      STACK                                    HEAP
+
++-------------------------+
+| "number:" Number        |
+|  "n: 42 (4 bytes)"      |
++-------------------------+
+| "v: Vec<i32>"           |              +--+--+--+--+
+|  "ptr: (8 bytes)"  *----+------------->|1 |2 |  |  |
+|  "len: 2 (8 bytes)"     |              +--+--+--+--+
+|  "cap: 4 (8 bytes)"     |        "(8 bytes + capacity for 2 more)"
++-------------------------+
+"Total: 24 bytes on stack"
+
+```
 
 We'll explore heap and allocation in more detail in the next section.
 

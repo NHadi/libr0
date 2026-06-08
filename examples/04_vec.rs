@@ -1,4 +1,4 @@
-//! Chapter 4: Vec - Exercises
+﻿//! Chapter 4: Vec - Exercises
 //!
 //! Complete the TODO items to practice using Vec0 methods.
 //! Run with: cargo run --example vec

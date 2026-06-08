@@ -1,4 +1,4 @@
-# ManuallyDrop & Anti-patterns
+﻿# ManuallyDrop & Anti-patterns
 
 ## Implementation: Why Rc Needs ManuallyDrop
 

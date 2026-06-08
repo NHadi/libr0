@@ -1,4 +1,4 @@
-# Advanced Methods & Deref Coercion
+﻿# Advanced Methods & Deref Coercion
 
 ### leak - Intentionally Leak Memory
 

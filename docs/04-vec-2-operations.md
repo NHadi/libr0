@@ -1,4 +1,4 @@
-# Operations & Performance
+﻿# Operations & Performance
 
 ## Common Operations
 

@@ -1,4 +1,4 @@
-# Chapter 8: Rc + RefCell - Shared Mutable State (Single-Threaded)
+﻿# Chapter 8: Rc + RefCell - Shared Mutable State (Single-Threaded)
 
 ## The Problem: Rc Can't Mutate
 

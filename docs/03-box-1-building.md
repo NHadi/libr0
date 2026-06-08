@@ -1,4 +1,4 @@
-# Building Our Own Box
+﻿# Building Our Own Box
 
 We can't truly replicate `Box` without compiler magic, but we can understand its core:
 
@@ -227,69 +227,43 @@ After `into_inner()`:
 
 **Before `into_inner()`:**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <div class="mem-layout-label">boxed: Box0</div>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">String struct</span>
-    </div>
-    <span class="mem-layout-heap-marker">(heap)</span>
-  </div>
-  <div class="mem-layout-row" style="padding-left: 180px;">
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-      <span class="mem-layout-block len">len: 5</span>
-      <span class="mem-layout-block cap">cap: 5</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block data">h</span>
-      <span class="mem-layout-block data">e</span>
-      <span class="mem-layout-block data">l</span>
-      <span class="mem-layout-block data">l</span>
-      <span class="mem-layout-block data">o</span>
-    </div>
-    <span class="mem-layout-heap-marker">(heap, 5 bytes)</span>
-  </div>
-  <div class="mem-layout-note">Box0 owns a pointer to the String struct on the heap. The String itself points to the character data.</div>
-</div>
+```bob
+        STACK             |       HEAP
+                          | 
+   +---------------+      |     +------------------+
+   | boxed: Box0   |      |     | String struct    |
+   +---------------+      |     +------------------+
+   | ptr: *--------+------+---->| "ptr:"*-----.    |
+   +---------------+      |     | "len:"5      |   |
+   8 bytes                |     | "cap:"5      |   |
+                          |     +--------------+---+
+                          |                    |
+                          |                    v
+                          |                  +---+---+---+---+---+
+                          |                  | h | e | l | l | o |  "(5 bytes)"
+                          |                  +---+---+---+---+---+
+```
 
 **After `into_inner()`:**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <div class="mem-layout-label" style="text-decoration: line-through; opacity: 0.4;">boxed: Box0</div>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block freed">freed</span>
-    </div>
-    <span class="mem-layout-arrow" style="opacity: 0.3;">→</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block freed">String struct (freed)</span>
-    </div>
-  </div>
-  <div class="mem-layout-row">
-    <div class="mem-layout-label">s: String</div>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-      <span class="mem-layout-block len">len: 5</span>
-      <span class="mem-layout-block cap">cap: 5</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block data">h</span>
-      <span class="mem-layout-block data">e</span>
-      <span class="mem-layout-block data">l</span>
-      <span class="mem-layout-block data">l</span>
-      <span class="mem-layout-block data">o</span>
-    </div>
-    <span class="mem-layout-heap-marker">(heap, 5 bytes)</span>
-  </div>
-  <div class="mem-layout-note">The String struct moved from heap to stack. The character data stays on the heap, now owned directly by s.</div>
-</div>
+```bob
+        STACK             |        HEAP
+                          |  
+   .---------------.      |      .------------------.
+   | boxed: Box0   |      |      : String struct    :
+   | "(consumed)"  |      |      : "(freed!)"       :
+   '---------------'      |      '------------------'
+                          |  
+   +---------------+      |      
+   | s: String     |      |      
+   +---------------+      |      +---+---+---+---+---+
+   | "ptr:"*-------+------+----->| h | e | l | l | o |  "(5 bytes)"
+   | "len:"5       |      |      +---+---+---+---+---+
+   | "cap:"5       |      |  
+   +---------------+      |  
+   24 bytes               |  
+                          |  
+```
 
 The String still owns its heap-allocated data - we just moved the String struct itself from heap to stack!
 

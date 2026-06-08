@@ -1,4 +1,4 @@
-# Appendix: Sized - Understanding Compile-Time Size
+﻿# Appendix: Sized - Understanding Compile-Time Size
 
 This document covers Rust's `Sized` trait and dynamically-sized types (DSTs) - one of Rust's most invisible yet fundamental features.
 
@@ -234,20 +234,15 @@ A reference to a DST is called a **fat pointer** because it contains extra metad
 ### Fat Pointer Layout
 
 **For slices (`&[T]`) and string slices (`&str`):**
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">&amp;[T]</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">Data Pointer (8B)</span>
-      <span class="mem-layout-block len">Length (8B)</span>
-    </div>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label"></span>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-heap-marker">points to actual data on heap/stack</span>
-  </div>
-</div>
+```bob
++---------------------+---------------------+
+|   Data Pointer      |      Length         |
+|    "(8 bytes)"      |     "(8 bytes)"     |
++---------------------+---------------------+
+        |
+        v
+  Points to actual data on heap/stack
+```
 
 Example:
 ```rust
@@ -260,20 +255,15 @@ let slice: &[i32] = &data[1..4];  // [2, 3, 4]
 ```
 
 **For trait objects (`&dyn Trait`):**
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">&amp;dyn Trait</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">Data Pointer (8B)</span>
-      <span class="mem-layout-block tag">VTable Pointer (8B)</span>
-    </div>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label"></span>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-note">data pointer → concrete value, vtable pointer → function pointers</span>
-  </div>
-</div>
+```bob
+┌─────────────────────┬─────────────────────┐
+│   Data Pointer      │   VTable Pointer    │
+│    (8 bytes)        │     (8 bytes)       │
+└─────────────────────┴─────────────────────┘
+        ↓                     ↓
+  Points to data        Points to vtable
+                        (function pointers)
+```
 
 Example:
 ```rust
@@ -349,25 +339,13 @@ println!("{}", std::mem::size_of::<&[i32]>());  // ✅ OK: 16 bytes (fat pointer
 
 The reference has a known size even though the thing it points to doesn't!
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">[i32] (unsized)</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block freed">???</span>
-      <span class="mem-layout-block freed">???</span>
-      <span class="mem-layout-block freed">???</span>
-    </div>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">&amp;[i32] (16B)</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-      <span class="mem-layout-block len">len</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-note">points to [i32] data</span>
-  </div>
-</div>
+```bob
+[i32]           &[i32]
+(unsized)       (sized - 16 bytes)
+  ???           ┌─────────┬─────────┐
+  ???  <────────│ ptr     │ len     │
+  ???           └─────────┴─────────┘
+```
 
 ### Confusion #2: "String is Sized, but str is Not"
 
@@ -382,43 +360,16 @@ println!("{}", std::mem::size_of::<&str>());    // ✅ 16 bytes
 - `str` is the actual text data - variable length
 - `&str` is a fat pointer to text data - always 16 bytes
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">String (24B)</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-      <span class="mem-layout-block len">len: 5</span>
-      <span class="mem-layout-block cap">cap: 10</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-heap-marker">(heap)</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block data">h</span>
-      <span class="mem-layout-block data">e</span>
-      <span class="mem-layout-block data">l</span>
-      <span class="mem-layout-block data">l</span>
-      <span class="mem-layout-block data">o</span>
-    </div>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">str (unsized)</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block freed">???</span>
-      <span class="mem-layout-block freed">???</span>
-      <span class="mem-layout-block freed">???</span>
-    </div>
-    <span class="mem-layout-note">variable length, unknown at compile time</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">&amp;str (16B)</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-      <span class="mem-layout-block len">len</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-note">points to str data on heap</span>
-  </div>
-</div>
+```bob
+String (24 bytes)          str (unsized)           &str (16 bytes)
+┌────────────────┐         ??????????              ┌─────────┬─────────┐
+│ ptr ────────┐  │         ?????????               │ ptr     │ len     │
+│ len: 5      │  │         ?????????               └────┬────┴─────────┘
+│ cap: 10     │  │         ?????????                    │
+└─────────────┘  │                                      │
+                 └────────> h e l l o ??? <──────────────┘
+                            (on heap)
+```
 
 ### Confusion #3: "Box\<T\> is Sized, but Box\<[T]\> Also Exists"
 

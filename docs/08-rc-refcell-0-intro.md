@@ -1,4 +1,4 @@
-# Chapter 8: Rc + RefCell - Shared Mutable State (Single-Threaded)
+﻿# Chapter 8: Rc + RefCell - Shared Mutable State (Single-Threaded)
 
 ## The Problem: Rc Can't Mutate
 
@@ -65,39 +65,24 @@ println!("Counter: {}", counter.borrow()); // 2
 
 `Rc<RefCell<T>>` has two levels of tracking in a single allocation:
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">counter: Rc</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-heap-marker">(heap)</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block len">strong: 3</span>
-      <span class="mem-layout-block cap">weak: 0</span>
-      <span class="mem-layout-block tag">borrow: 0</span>
-      <span class="mem-layout-block val">value: 2</span>
-    </div>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">counter1: Rc</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-note">same heap allocation ↑</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">counter2: Rc</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-note">same heap allocation ↑</span>
-  </div>
-  <div class="mem-layout-note">Rc tracks # of owners (strong_count) · RefCell tracks borrows at runtime</div>
-</div>
+```bob
+     STACK                |           HEAP
+                          |
++-------------+           |  +-----------------------+
+|"counter: Rc"|           |  | RcInner               |
+|"ptr:" *-----+------+----+->+-----------------------+
++-------------+      |    |  | "strong_count: 3"  <--+--- Rc tracks # of owners
+                     |    |  | "weak_count: 0"       |
++--------------+     |    |  |         +-------------+
+|"counter1: Rc"|     |    |  | "value:"|RefCell<i32> |
+|"ptr:"*-------+-----+    |  |         | "borrow:"0  |<-- RefCell tracks borrows   
++--------------+     |    |  |         |  "value:"2  |   "(after two increments)"
+                     |    |  |         +-------------+ 
++--------------+     |    |  +-----------------------+
+|"counter2: Rc |     |    |
+|"ptr:"*-------+-----+    |
++--------------+          |
+```
 
 **Two kinds of tracking:**
 
@@ -191,35 +176,28 @@ let node_b = Rc::new(Node {
 
 **Visual representation of the cycle:**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">node_a: Rc</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-heap-marker">(heap)</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block len">strong: 2</span>
-      <span class="mem-layout-block val">value: 1</span>
-      <span class="mem-layout-block ptr">next: ptr →</span>
-    </div>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">node_b: Rc</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-heap-marker">(heap)</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block len">strong: 2</span>
-      <span class="mem-layout-block val">value: 2</span>
-      <span class="mem-layout-block ptr">next: ptr →</span>
-    </div>
-  </div>
-  <div class="mem-layout-note">⚠️ Cycle: node_a.next → node_b · node_b.next → node_a — counts never reach 0!</div>
-</div>
+```bob
+    STACK         |              HEAP
+                  |
++------------+    |     +--------------------+
+|"node_a: Rc"|----|---->| RcInner<Node>      |<--.
++------------+    |     +--------------------+   |
+                  |     | "strong_count:"2   |   |
+                  |     | "value:"1          |   |
+                  |     | "next: Rc" *       |   |
+                  |     +------------|-------+   |
+                  |               .--'           |
+                  |               |              |
+                  |               v              |
++------------+    |     +--------------------+   |
+|"node_b: Rc"|----|---->| RcInner<Node>      |   |
++------------+    |     +--------------------+   |
+                  |     | "strong_count:"2   |   |
+                  |     | "value:"2          |   |
+                  |     | "next: Rc" *-------+---'
+                  |     +--------------------+
+                  |      
+```
 
 **When the stack variables drop:**
 
@@ -248,24 +226,12 @@ This is a **memory leak** - the memory is allocated but never freed. Unlike othe
 
 Remember our cycle problem? Both nodes point to each other:
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">node_a</span>
-    <span class="mem-layout-arrow">→</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block len">inner_a (count: 2)</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block len">inner_b (count: 2)</span>
-    </div>
-    <span class="mem-layout-arrow">←</span>
-    <span class="mem-layout-label">node_b</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-note">↑ inner_b.next points back to inner_a — cycle! Neither count reaches 0 after drop.</span>
-  </div>
-</div>
+```bob
+ "node_a" ---> "inner node_a" ----> "inner node_b"  <-- "node_b"
+               "(count: 2)"         "(count: 2)"
+                    ^                     |
+                    +─────────────────────+
+```
 
 When we drop both variables, the counts go from 2 to 1, but never reach 0. **The nodes keep each other alive forever.**
 
@@ -442,46 +408,28 @@ if let Some(parent) = child1.parent.borrow().upgrade() {
 
 **Visual representation:**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">root</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">value: 1</span>
-    </div>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label"></span>
-    <span class="mem-layout-note">│ Strong refs (parent owns children)</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label"></span>
-    <span class="mem-layout-arrow">↓</span>
-    <span class="mem-layout-arrow">↓</span>
-    <span class="mem-layout-arrow">↓</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">child1</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">value: 2</span>
-      <span class="mem-layout-block tag">parent: Weak →</span>
-    </div>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">child2</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">value: 3</span>
-      <span class="mem-layout-block tag">parent: Weak →</span>
-    </div>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">child3</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">value: 4</span>
-      <span class="mem-layout-block tag">parent: Weak →</span>
-    </div>
-  </div>
-  <div class="mem-layout-note">Weak refs back to parent — children don't keep parent alive. No cycle!</div>
-</div>
+```bob
++-------------+
+|    root     |<~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.
+|  "value:"1  |                               :
++------+------+                               :
+       |                                      :
+       | Strong refs, parent owns children    :
+       |                                      :
+       +----------+--------------+            :
+       |          |              |            :
+       v          v              v            :
++-----------+ +-----------+ +-----------+     :
+|  child1   | |  child2   | |  child3   |     :
+| "value: 2"| | "value: 3"| | "value: 4"|     :
++------:----+ +-----:-----+ +-----:-----+     :
+       :            :             :           :
+       '~~~~~~~~~~~~+~~~~~~~~~~~~~'           :
+                    :                         :
+   Weak, children do:not own parent           :
+                    :                         :
+                    '~~~~~~~~~~~~~~~~~~~~~~~~~'
+```
 
 **Why this works:**
 

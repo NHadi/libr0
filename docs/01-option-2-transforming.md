@@ -1,4 +1,4 @@
-# Transforming Options
+﻿# Transforming Options
 
 ## map - Transform the Inner Value
 

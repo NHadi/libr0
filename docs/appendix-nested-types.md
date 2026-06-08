@@ -1,4 +1,4 @@
-# Appendix: Nested Types - Understanding Order and Flexibility
+﻿# Appendix: Nested Types - Understanding Order and Flexibility
 
 When combining smart pointers like `Rc`, interior mutability types like `RefCell`, and containers like `Option`, the order matters! This appendix explores the different combinations and what they mean.
 

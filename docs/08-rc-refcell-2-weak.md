@@ -1,4 +1,4 @@
-# Implementing Weak
+﻿# Implementing Weak
 
 ## Building Weak\<T\>
 

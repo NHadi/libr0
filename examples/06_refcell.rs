@@ -1,4 +1,4 @@
-//! Chapter 6: RefCell - Exercises
+﻿//! Chapter 6: RefCell - Exercises
 //!
 //! Complete the TODO items to practice using RefCell0 for runtime borrow checking.
 //! Run with: cargo run --example refcell

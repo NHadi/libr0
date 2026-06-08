@@ -1,4 +1,4 @@
-# Patterns & Pitfalls
+﻿# Patterns & Pitfalls
 
 ## Common Patterns
 

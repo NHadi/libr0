@@ -1,4 +1,4 @@
-# Chapter 2: Result - Error Handling Done Right
+﻿# Chapter 2: Result - Error Handling Done Right
 
 ## The Problem: Exceptions Are Invisible
 

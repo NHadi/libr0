@@ -1,4 +1,4 @@
-# Raw Pointers & Unsafe
+﻿# Raw Pointers & Unsafe
 
 ### Raw Pointers
 
@@ -19,26 +19,14 @@ You can think a reference as a safe pointer guaranteed by the compiler.
 
 **What's in memory :**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Stack</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">x</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">42</span>
-    </div>
-    <span class="mem-layout-note">0x7FFF_FFFF_FF00</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">x_ref</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">0x7FFF_FFFF_FF00</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-note">points to x</span>
-  </div>
-</div>
+```bob
+STACK
+                         +-----------------------+
+"0x7FFF_FFFF_FF00"     x |  42                   |<--+
+                         +-----------------------+   |
+"0x7FFF_FFFF_FF04  x_ref"| "0x7FFF_FFFF_FF00" *--+---+
+                         +-----------------------+
+```
 
 **Key points about references:**
 
@@ -56,25 +44,13 @@ let mut y: i32 = 100;
 let y_mut_ref: &mut i32 = &mut y;
 ```
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Stack</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">y</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">100</span>
-    </div>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">y_mut_ref</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">Address of y</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-note">points to y</span>
-  </div>
-</div>
+```bob
+       STACK
+  y               "y_mut_ref"
++------+       +---------------+
+| 100  |<------|  Address of y |
++------+       +---------------+
+```
 
 ```rust
 *y_mut_ref = 200;
@@ -82,26 +58,13 @@ let y_mut_ref: &mut i32 = &mut y;
 
 Dereferencing `y_mut_ref` modifies the value of `y` in place — `y_mut_ref` itself still holds the same address, the address of `y`.
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Stack</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">y</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">200</span>
-    </div>
-    <span class="mem-layout-note">mutated via *y_mut_ref = 200</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">y_mut_ref</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">Address of y</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-note">still points to y</span>
-  </div>
-</div>
+```bob
+       STACK
+  y               "y_mut_ref"
++------+       +---------------+
+| 200  |<------|  Address of y |
++------+       +---------------+
+```
 
 **References vs Raw Pointers:**
 
@@ -272,50 +235,19 @@ Unlike `Vec`, raw pointers don't do bounds checking! `Vec` would panic on `vec[3
 
 After \*ptr.add(2) = 3, the heap looks like this:
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Stack</span>
-    <span class="mem-layout-note">0x7FFF_FFFF_FF00</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">ptr</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">0x5555_8000_0000</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-heap-marker">(heap)</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Heap</span>
-    <span class="mem-layout-note">0x5555_8000_0000 (12 bytes: 3 × i32)</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">+0</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">1</span>
-    </div>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">+4</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">2</span>
-    </div>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">+8</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">3</span>
-    </div>
-    <span class="mem-layout-note">last element of allocation</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">+12</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block freed">4</span>
-    </div>
-    <span class="mem-layout-note">⚠️ beyond allocation (UB)</span>
-  </div>
-</div>
+```bob
+"Stack (0x7FFF_FFFF_FF00)"              "Heap (0x5555_8000_0000)"
+                                   "(12 bytes total: 3 × 4-byte i32s)"
+    +---------------------+         +-----+
+ptr |  "0x5555_8000_0000" +-------> |  1  |
+    +---------------------+         +-----+
+                                    |  2  | +4
+                                    +-----+
+Last element of our allocation  --> |  3  | +8
+                                    +-----+
+Beyond our allocation  -----------> |  4  | +12
+                                    +-----+
+```
 
 **Key points:**
 

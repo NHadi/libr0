@@ -1,4 +1,4 @@
-//! Chapter 5: Cell - Exercises
+﻿//! Chapter 5: Cell - Exercises
 //!
 //! Complete the TODO items to practice using Cell0 for interior mutability.
 //! Run with: cargo run --example cell

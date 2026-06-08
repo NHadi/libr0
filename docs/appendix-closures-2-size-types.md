@@ -1,4 +1,4 @@
-# Size & Type Annotations
+﻿# Size & Type Annotations
 
 ## Closure Size and Zero-Cost Abstractions
 

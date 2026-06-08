@@ -1,4 +1,4 @@
-//! Chapter 7: Rc - Exercises
+﻿//! Chapter 7: Rc - Exercises
 //!
 //! Complete the TODO items to practice using Rc0 for shared ownership.
 //! Run with: cargo run --example rc

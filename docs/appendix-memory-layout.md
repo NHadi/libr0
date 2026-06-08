@@ -1,4 +1,4 @@
-# Appendix: Memory Layout - Where Your Data Lives
+﻿# Appendix: Memory Layout - Where Your Data Lives
 
 This document demystifies where your Rust data actually lives in memory. We'll visualize the process memory layout and understand the stack, heap, and static data segments.
 

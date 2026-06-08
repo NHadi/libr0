@@ -1,4 +1,4 @@
-# Building & Practice
+﻿# Building & Practice
 
 ## Building Our Own Cell
 
@@ -126,24 +126,13 @@ let r2 = cell.get_mut();  // ❌ Error: cannot borrow `cell` as mutable more tha
 
 **Why this defeats Cell's purpose:**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Cell's point:</span>
-    <span class="mem-layout-block ptr">&amp;Cell&lt;T&gt;</span>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-block tag">set()</span>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-note">mutate through &amp;self (interior mutability)</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">get_mut:</span>
-    <span class="mem-layout-block ptr">&amp;mut Cell&lt;T&gt;</span>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-block tag">get_mut()</span>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-note">&amp;mut T (normal mutability)</span>
-  </div>
-</div>
+```bob
+Cell's point:        &Cell<T>  --set()-->  mutate through &self
+                                            (interior mutability)
+
+get_mut:        &mut Cell<T>  --get_mut()-->  &mut T
+                                               (normal mutability)
+```
 
 If you have `&mut Cell`, you could've just used `T` directly:
 

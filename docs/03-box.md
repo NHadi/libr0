@@ -1,4 +1,4 @@
-# Chapter 3: Box - Heap Allocation
+﻿# Chapter 3: Box - Heap Allocation
 
 ## Common Misconceptions
 

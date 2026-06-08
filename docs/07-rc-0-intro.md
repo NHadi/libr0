@@ -1,4 +1,4 @@
-# Chapter 7: Rc - Reference Counting
+﻿# Chapter 7: Rc - Reference Counting
 
 ## The Real Problem: Multiple Owners Need the Same Data
 
@@ -51,42 +51,25 @@ let logger = Logger::new(Rc::clone(&config));  // ✅ +1 owner
 
 **With `Rc<T>` (What we want):**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Stack</span>
-    <span class="mem-layout-label" style="margin-left: auto;">Heap</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Rc</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <div class="mem-layout-blocks" style="flex-direction: column; align-items: flex-start;">
-      <span class="mem-layout-block data">Config</span>
-      <span class="mem-layout-block val">db_url: String</span>
-      <span class="mem-layout-block val">api_key: String</span>
-    </div>
-    <span class="mem-layout-heap-marker">(heap)</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Rc</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-    </div>
-    <span class="mem-layout-arrow">↗</span>
-    <span class="mem-layout-note">same allocation</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Rc</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-    </div>
-    <span class="mem-layout-arrow">↗</span>
-    <span class="mem-layout-note">same allocation</span>
-  </div>
-  <div class="mem-layout-note">All three Rc pointers point to the SAME heap allocation</div>
-</div>
+```bob
+     STACK            |               HEAP
+                      |
++----------+          |        +---------------------+
+| Rc       |          |        | Config              |
+| ptr *----+------+---+------->+---------------------+
++----------+      |   |        | db_url: String      |     
+                  |   |        | api_key: String     |     
+                  |   |        +--------^------------+
++----------+      |   |                 |
+| Rc       |      |   |                 o
+| ptr *----+------+   |        ALL three Rc pointers
++----------+      |   |        point to THIS SAME allocation!
+                  |   |                 
++----------+      |   |
+| Rc       |      |   |
+| ptr *----+------+   |
++----------+          |
+```
 
 ✅ **Multiple owners, one allocation, shared data**
 
@@ -98,46 +81,21 @@ let logger = Logger::new(Rc::clone(&config));  // ✅ +1 owner
 
 **With `Box<T>` (Doesn't work for sharing):**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Stack</span>
-    <span class="mem-layout-label" style="margin-left: auto;">Heap</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Box ptr</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block data">Config copy</span>
-    </div>
-    <span class="mem-layout-note">Separate allocation</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Box ptr</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block data">Config copy</span>
-    </div>
-    <span class="mem-layout-note">Another separate allocation</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Box ptr</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block data">Config copy</span>
-    </div>
-    <span class="mem-layout-note">Yet another allocation</span>
-  </div>
-  <div class="mem-layout-note">Each Box owns a DIFFERENT copy — expensive and inconsistent</div>
-</div>
+```bob
+     STACK            |               HEAP
+                      |
++----------+          |        +-------------+
+| Box ptr  |----------|------->| Config copy |  <- Separate allocation
++----------+          |        +-------------+
+                      |
++----------+          |        +-------------+
+| Box ptr  |----------|------->| Config copy |  <- Another separate allocation
++----------+          |        +-------------+
+                      |
++----------+          |        +-------------+
+| Box ptr  |----------|------->| Config copy |  <- Yet another allocation
++----------+          |        +-------------+
+```
 
 ❌ **Problem: Each Box owns a DIFFERENT copy**
 
@@ -156,40 +114,21 @@ let logger = Box::new(config);  // ❌ ERROR: config already moved!
 
 **With references (Lifetime hell):**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Stack</span>
-    <span class="mem-layout-label" style="margin-left: auto;">Heap (or Stack)</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">&config</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block data">Config</span>
-    </div>
-    <span class="mem-layout-note">All references point to the same data</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">&config</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-    </div>
-    <span class="mem-layout-arrow">↗</span>
-    <span class="mem-layout-note">same data — but WHO owns it?</span>
-  </div>
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">&config</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-    </div>
-    <span class="mem-layout-arrow">↗</span>
-    <span class="mem-layout-note">same data</span>
-  </div>
-  <div class="mem-layout-note">References don't own — lifetimes get complex</div>
-</div>
+```bob
+   Stack                 Heap "(or Stack)"
+
++----------+            +-------------+
+| &config  |----------->|   Config    |  <- All references point to
++----------+            +-------------+     the same data "(good!)"
+                               ^
++----------+                   |
+| &config  |-------------------+            But WHO owns it?
++----------+                   |
+                               |
++----------+                   |
+| &config  |-------------------+
++----------+
+```
 
 ❌ **Problem: References don't own - lifetimes get complex**
 

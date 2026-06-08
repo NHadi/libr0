@@ -1,15 +1,16 @@
-/* Tokio-Inspired Markdown Styles for libr0 */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
+/* Framer-Inspired Markdown Styles for libr0 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
 
 :root {
     --rust-orange: #CE422B;
-    --tokio-magenta: #c83895;
-    --tokio-magenta-dark: #a82d7a;
+    --tokio-magenta: #CE422B;
+    --tokio-magenta-dark: #A53522;
+    --bg-dark: #111111;
 }
 
 /* Base typography */
 body {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 1.06em;
     -webkit-font-smoothing: antialiased;
 }
@@ -698,139 +699,4 @@ a img[src*="badge"] {
 .coal .philosophy-item,
 .ayu .philosophy-item {
     background: rgba(22, 27, 34, 0.8);
-}
-
-/* ========================================
-   MEMORY LAYOUT BLOCKS (cheats.rs style)
-   Professional colored blocks for diagrams
-   ======================================== */
-
-.mem-layout {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin: 1.5em 0;
-    padding: 20px 24px;
-    background: #fff8f0;
-    border-left: 4px solid var(--rust-orange);
-    border-radius: 4px;
-    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
-    font-size: 0.9em;
-}
-
-.mem-layout-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.mem-layout-label {
-    min-width: 120px;
-    font-weight: 600;
-    color: #1a1a1a;
-}
-
-.mem-layout-blocks {
-    display: flex;
-    gap: 2px;
-    align-items: center;
-}
-
-.mem-layout-block {
-    padding: 5px 10px;
-    border-radius: 3px;
-    font-size: 0.85em;
-    font-weight: 500;
-    border: 1px solid;
-    text-align: center;
-    white-space: nowrap;
-}
-
-.mem-layout-block.ptr { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.3); color: #1d4ed8; }
-.mem-layout-block.len { background: rgba(22,163,74,0.08); border-color: rgba(22,163,74,0.3); color: #15803d; }
-.mem-layout-block.cap { background: rgba(161,98,7,0.08); border-color: rgba(161,98,7,0.25); color: #92400e; }
-.mem-layout-block.val { background: rgba(206,66,43,0.08); border-color: rgba(206,66,43,0.25); color: #b91c1c; }
-.mem-layout-block.tag { background: rgba(124,58,237,0.08); border-color: rgba(124,58,237,0.25); color: #6d28d9; }
-.mem-layout-block.data { background: rgba(161,98,7,0.06); border-color: rgba(161,98,7,0.2); color: #92400e; }
-.mem-layout-block.freed { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.12); color: #9ca3af; border-style: dashed; text-decoration: line-through; }
-
-.mem-layout-arrow {
-    color: #6b7280;
-    font-size: 1.1rem;
-    padding: 0 4px;
-}
-
-.mem-layout-heap-marker {
-    font-size: 0.75em;
-    color: rgba(37, 99, 235, 0.6);
-    font-style: italic;
-    margin-left: 4px;
-}
-
-.mem-layout-note {
-    font-size: 0.8em;
-    color: #6b7280;
-    margin-top: 4px;
-    font-style: italic;
-}
-
-/* ========================================
-   PROFESSIONAL CHECK/CROSS ICONS
-   ======================================== */
-
-.icon-check,
-.icon-cross {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    vertical-align: middle;
-    margin-right: 4px;
-    flex-shrink: 0;
-}
-
-.icon-check {
-    background: rgba(22, 163, 74, 0.1);
-    border: 1.5px solid rgba(22, 163, 74, 0.4);
-    color: #15803d;
-}
-
-.icon-cross {
-    background: rgba(220, 38, 38, 0.08);
-    border: 1.5px solid rgba(220, 38, 38, 0.35);
-    color: #dc2626;
-}
-
-.icon-check svg,
-.icon-cross svg {
-    width: 10px;
-    height: 10px;
-}
-
-pre .icon-check,
-pre .icon-cross,
-code .icon-check,
-code .icon-cross {
-    width: 14px;
-    height: 14px;
-    margin-right: 2px;
-}
-
-pre .icon-check svg,
-pre .icon-cross svg,
-code .icon-check svg,
-code .icon-cross svg {
-    width: 8px;
-    height: 8px;
-}
-
-td .icon-check,
-td .icon-cross,
-th .icon-check,
-th .icon-cross {
-    width: 16px;
-    height: 16px;
 }

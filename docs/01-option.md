@@ -1,4 +1,4 @@
-# Chapter 1: Option - The Simplest Enum
+﻿# Chapter 1: Option - The Simplest Enum
 
 ## The Problem: Null References
 

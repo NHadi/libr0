@@ -1,4 +1,4 @@
-# Slices, Strings & Operations
+﻿# Slices, Strings & Operations
 
 ## Slices: Views into Vec
 
@@ -17,23 +17,19 @@ Why slices are special:
 
 A slice `&[T]` is a _view_ into contiguous memory. It's a fat pointer:
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <div class="mem-layout-label">&amp;[T]</div>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-      <span class="mem-layout-block len">len</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block data">T</span>
-      <span class="mem-layout-block data">T</span>
-      <span class="mem-layout-block data">T</span>
-    </div>
-    <span class="mem-layout-heap-marker">(contiguous memory)</span>
-  </div>
-  <div class="mem-layout-note">Fat pointer: 16 bytes on 64-bit (8-byte ptr + 8-byte len). Points into existing data — no ownership.</div>
-</div>
+```bob
+Slice structure:
++---------------+-------------+
+| ptr: *const T | len: usize  |
+|      *        |             |
++------|--------+-------------+
+       |  
+       | "(points to array elements in memory)"
+       |
+       |       +---+---+---+
+       +------>| T | T | T | 
+               +---+---+---+
+```
 
 Convert `Vec<T>` to `&[T]`:
 
@@ -158,104 +154,64 @@ let slice: &str = &s[0..3];  // "hel"
 
 `[1, 2, 3]`
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <div class="mem-layout-label">Stack</div>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block data">1</span>
-      <span class="mem-layout-block data">2</span>
-      <span class="mem-layout-block data">3</span>
-    </div>
-  </div>
-  <div class="mem-layout-note">12 bytes on stack. No heap allocation, no indirection.</div>
-</div>
+```bob
+    Stack
++----+----+----+
+| 1  | 2  | 3  |
++----+----+----+
+```
 
 ### Box: Heap (single value)
 
 **`Box::new([1, 2, 3])`**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <div class="mem-layout-label">Stack</div>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <div class="mem-layout-label">Heap</div>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block data">1</span>
-      <span class="mem-layout-block data">2</span>
-      <span class="mem-layout-block data">3</span>
-    </div>
-  </div>
-  <div class="mem-layout-note">8 bytes on stack (pointer). 12 bytes on heap (data). Single owner.</div>
-</div>
+```bob
+Stack               Heap
++-------+         +---+---+---+
+| ptr *-+-------->| 1 | 2 | 3 |
++-------+         +---+---+---+
+```
 
 ### Vec: Heap (growable)
 
 **After `vec.push(1); vec.push(2); vec.push(3); ... ; vec.push(7)`**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <div class="mem-layout-label">vec: Vec&lt;i32&gt;</div>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-      <span class="mem-layout-block len">len: 7</span>
-      <span class="mem-layout-block cap">cap: 10</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block data">1</span>
-      <span class="mem-layout-block data">2</span>
-      <span class="mem-layout-block data">3</span>
-      <span class="mem-layout-block data">4</span>
-      <span class="mem-layout-block data">5</span>
-      <span class="mem-layout-block data">6</span>
-      <span class="mem-layout-block data">7</span>
-      <span class="mem-layout-block freed">?</span>
-      <span class="mem-layout-block freed">?</span>
-      <span class="mem-layout-block freed">?</span>
-    </div>
-    <span class="mem-layout-heap-marker">(heap)</span>
-  </div>
-  <div class="mem-layout-note">Stack: 24 bytes (ptr + len + cap). Heap: capacity × size_of::&lt;T&gt;(). Elements beyond len are uninitialized.</div>
-</div>
+```bob
+       STACK         |                HEAP
+                     |
++-----------------+  |
+| vec: Vec<i32>   |  |        <-------- len ---------->
++-----+-----+-----+  |      +---+---+---+---+---+---+---+---+---+---+
+| "ptr:" *--------+--|----->| 1 | 2 | 3 | 4 | 5 | 6 | 7 | ? | ? | ? |
+| "len:" 7        |  |      +---+---+---+---+---+---+---+---+---+---+
+| "cap:" 10       |  |        <------------ capacity ------------->
++-----+-----+-----+  |
+```
+
+`Vec` on stack: 24 bytes (on 64-bit: 8 + 8 + 8)
+Actual data: on heap
 
 ### Slice: View (no ownership)
 
 **`let slice = &vec[1..5]; // [2, 3, 4, 5, 6]`**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <div class="mem-layout-label">vec: Vec&lt;i32&gt;</div>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr</span>
-      <span class="mem-layout-block len">len: 7</span>
-      <span class="mem-layout-block cap">cap: 10</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block data">1</span>
-      <span class="mem-layout-block val">2</span>
-      <span class="mem-layout-block val">3</span>
-      <span class="mem-layout-block val">4</span>
-      <span class="mem-layout-block val">5</span>
-      <span class="mem-layout-block val">6</span>
-      <span class="mem-layout-block data">7</span>
-      <span class="mem-layout-block freed">?</span>
-      <span class="mem-layout-block freed">?</span>
-      <span class="mem-layout-block freed">?</span>
-    </div>
-    <span class="mem-layout-heap-marker">(heap)</span>
-  </div>
-  <div class="mem-layout-row" style="margin-top: 8px;">
-    <div class="mem-layout-label">slice: &amp;[i32]</div>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">ptr ↗</span>
-      <span class="mem-layout-block len">len: 5</span>
-    </div>
-    <span class="mem-layout-heap-marker">points to index 1..6 (highlighted above)</span>
-  </div>
-  <div class="mem-layout-note">Slice borrows a subrange of Vec's heap data. No copy, no allocation. 16 bytes on stack.</div>
-</div>                  
+```bob
+       STACK         |                    HEAP 
+                     |       
++-----------------+  | "index:"0   1   2   3   4   5   6   7   8   9
+| vec: Vec<i32>   |  | "slice:"    1     "..."     5
++-----+-----+-----+  |       +---+---+---+---+---+---+---+---+---+---+
+| "ptr:" *--------+--|------>| 1 | 2 | 3 | 4 | 5 | 6 | 7 | ? | ? | ? |
+| "len:" 7        |  |       +---+-^-+---+---+---+---+---+---+---+---+
+| "cap:" 10       |  |             |----- len ----->
++-----+-----+-----+  |             |
+                     |             |        
+                     |             |       
++---------------+    |             |
+| slice: &[i32] |    |             |
++---------------+    |             |
+| "ptr:" *------+----+-------------'
+| "len:" 5      |    | 
++---------------+    | 
+```                  
                     

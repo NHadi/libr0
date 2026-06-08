@@ -1,4 +1,4 @@
-//! Chapter 8: Rc0 + RefCell0 - Exercises
+﻿//! Chapter 8: Rc0 + RefCell0 - Exercises
 //!
 //! Complete the TODO items to practice using Rc0<RefCell0<T>> for shared mutable state.
 //! Run with: cargo run --example 08_rc_refcell

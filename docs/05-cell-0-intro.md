@@ -1,4 +1,4 @@
-# Chapter 5: Cell - Interior Mutability
+﻿# Chapter 5: Cell - Interior Mutability
 
 You want to track how many times a value gets accessed. Simple, right? Add a counter, increment it on every read. But Rust says no:
 
@@ -286,9 +286,9 @@ This is safe because you can't have a reference to something that might change -
 
 If Cell gave you a reference, you'd have:
 
-1. Multiple `&Cell` (shared references to the Cell itself) ✓ Allowed
-2. A `&T` (reference to the inner value) ✓ Should be valid
-3. But Cell can mutate through `&self`! ✗ Breaks Rust's aliasing rules!
+1. Multiple `&Cell` (shared references to the Cell itself) ✅ Allowed
+2. A `&T` (reference to the inner value) ✅ Should be valid
+3. But Cell can mutate through `&self`! ❌ Breaks Rust's aliasing rules!
 
 ```rust
 // Hypothetical broken Cell with get_ref:
@@ -306,35 +306,25 @@ println!("{}", r1);  // DANGER: r1 still pointing to the value inside the cell!
 
 **Step 1: `cell.get_ref()` returns a reference**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Cell&lt;i32&gt;</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">value: 5</span>
-    </div>
-    <span class="mem-layout-arrow">←</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">r1: &amp;i32</span>
-    </div>
-  </div>
-  <div class="mem-layout-note">r1 points directly into Cell's memory. Remember, &amp;i32 is immutable!</div>
-</div>
+```bob
++---------------+
+| Cell<i32>     |
+| +-----------+ |
+| | value: 5  | | <----- r1: &i32 points here
+| +-----------+ |        Remember, &i32 is immutable!
++---------------+
+```
 
 **Step 2: `cell.set(10)` changes the value**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Cell&lt;i32&gt;</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">value: 10</span>
-    </div>
-    <span class="mem-layout-arrow">←</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block ptr">r1: &amp;i32</span>
-    </div>
-  </div>
-  <div class="mem-layout-note">r1 STILL points here! But r1 is supposed to be immutable — the data it points to changed!</div>
-</div>
+```bob
++---------------+
+| Cell<i32>     |
+| +-----------+ |
+| | value: 10 | | <----- r1: &i32 STILL points here!
+| +-----------+ |        But r1 is supposed to be immutable!
++---------------+        The data it points to changed!
+```
 
 **BROKEN:** r1 points into Cell's memory, and that memory can be mutated.
 This violates Rust's aliasing rules: you have an immutable reference (&i32)
@@ -356,49 +346,36 @@ println!("{}", n);  // Still reads 5, because n is a copy, not a reference!
 
 **Initial state:**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Cell&lt;i32&gt;</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">value: 5</span>
-    </div>
-  </div>
-  <div class="mem-layout-note">Value lives inside Cell — no references escape.</div>
-</div>
+```bob
++--------------+
+| Cell<i32>    |
+| +----------+ |
+| | value: 5 | |  <- Value lives inside Cell
+| +----------+ |
++--------------+
+```
 
 **`cell.get()` - Returns a COPY:**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Cell&lt;i32&gt;</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">value: 5</span>
-    </div>
-    <span class="mem-layout-arrow">→</span>
-    <span class="mem-layout-label">copy</span>
-    <span class="mem-layout-arrow">→</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block data">5</span>
-    </div>
-  </div>
-  <div class="mem-layout-note">cell.get() returns a copy in new memory — no reference to Cell's internal value!</div>
-</div>
+```bob
++--------------+
+| Cell<i32>    |
+| +----------+ |    copy    +----+
+| | value: 5 | | ---------> | 5  |  <- Copy created in new memory location
+| +----------+ |            +----+    no reference to Cell's internal value!
++--------------+
+```
 
 **`cell.set(10)` - REPLACES the value:**
 
-<div class="mem-layout">
-  <div class="mem-layout-row">
-    <span class="mem-layout-label">Cell&lt;i32&gt;</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block val">value: 10</span>
-    </div>
-    <span class="mem-layout-label" style="min-width:auto; margin-left:24px;">n:</span>
-    <div class="mem-layout-blocks">
-      <span class="mem-layout-block data">5</span>
-    </div>
-  </div>
-  <div class="mem-layout-note">cell.set(10) replaces the inner value. The old copy (n) is unaffected — still 5.</div>
-</div>
+```bob
++---------------+
+| Cell<i32>     |
+| +-----------+ |            +----+
+| | value: 10 | |            | 5  |  <- Old value still 5
+| +-----------+ |            +----+
++---------------+
+```
 
 **Key insight**: You never get `&i32` or `&mut i32` pointing to the value inside Cell's box. Only copies come out. The inner value never escapes as a reference.
 

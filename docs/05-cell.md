@@ -1,4 +1,4 @@
-# Chapter 5: Cell - Interior Mutability
+﻿# Chapter 5: Cell - Interior Mutability
 
 You want to track how many times a value gets accessed. Simple, right? Add a counter, increment it on every read. But Rust says no:
 
@@ -286,9 +286,9 @@ This is safe because you can't have a reference to something that might change -
 
 If Cell gave you a reference, you'd have:
 
-1. Multiple `&Cell` (shared references to the Cell itself) ✓ Allowed
-2. A `&T` (reference to the inner value) ✓ Should be valid
-3. But Cell can mutate through `&self`! ✗ Breaks Rust's aliasing rules!
+1. Multiple `&Cell` (shared references to the Cell itself) ✅ Allowed
+2. A `&T` (reference to the inner value) ✅ Should be valid
+3. But Cell can mutate through `&self`! ❌ Breaks Rust's aliasing rules!
 
 ```rust
 // Hypothetical broken Cell with get_ref:

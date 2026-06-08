@@ -1,4 +1,4 @@
-# Appendix B: Closures - Fn, FnMut, FnOnce Traits
+﻿# Appendix B: Closures - Fn, FnMut, FnOnce Traits
 
 This document covers Rust's closure traits and how they represent different levels of capture and mutation.
 

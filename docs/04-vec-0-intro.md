@@ -1,4 +1,4 @@
-# Chapter 4: Vec - Growable Arrays
+﻿# Chapter 4: Vec - Growable Arrays
 
 ## The Problem: Fixed-Size Arrays
 

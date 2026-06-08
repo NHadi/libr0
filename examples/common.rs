@@ -1,4 +1,4 @@
-//! Common utilities for exercises
+﻿//! Common utilities for exercises
 
 /// Runs an exercise function, catching panics and printing results.
 /// Returns Ok(()) if the test passes, Err(()) if it fails.
@@ -29,11 +29,11 @@ macro_rules! run {
 
         match result {
             std::result::Result::Ok(_) => {
-                println!("✓");
+                println!("✅");
                 std::result::Result::Ok(())
             }
             std::result::Result::Err(err) => {
-                println!("✗ FAILED");
+                println!("❌ FAILED");
                 if let std::option::Option::Some(msg) = err.downcast_ref::<&str>() {
                     eprintln!("  {}", msg);
                 } else if let std::option::Option::Some(msg) = err.downcast_ref::<String>() {
